@@ -238,6 +238,24 @@ Always begin every CC session with: **"Please read all memory files first for fu
 
 ---
 
+## SESSION PROTOCOLS
+
+### New Claude Code Session
+**Start:** User opens with: *"Read all memory files first for full context, including handoff_protocol.md."*
+CC reads all memory files, then fetches SESSION LOG and IMMEDIATE NEXT ACTIONS from the public URL to orient on what changed last session.
+**End:** CC auto-updates the source of truth and pushes both repos per the handoff protocol below. Confirm both pushes succeeded. Nothing required from the user.
+
+### New Main Chat Session (always inside the CORPUS project)
+**Start:** User opens with: *"Read the CORPUS handoff doc at https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md, then ask what I want to work on."*
+**Stale doc check:** Raw GitHub URL caches for a few minutes after a push. Authoritative check: `https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md`
+**End:** Nothing required. Decisions/plans that must persist get logged by CC via a user prompt. Main chat reads the source of truth but cannot write to it — only CC writes.
+
+### Standing Rules (always apply)
+1. **Three-tier model:** (a) credentials → `.env` only, never in any doc/memory/chat; (b) private context → CC memory files only, never pushed; (c) shareable context → this public handoff doc only. Sort every new piece of information into one tier at creation.
+2. **Work only from inside the CORPUS project.** Outside conversations cannot see memory or route through CC.
+
+---
+
 ## CLAUDE CODE UPDATE PROTOCOL
 *CC must follow this at the end of any session that makes a meaningful change.*
 
@@ -279,6 +297,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-01 | Fix Spotify redirect_uri — remove hardcoded localhost fallback, read SPOTIFY_REDIRECT_URI from env only | 22b4a52 |
 | 2026-06-01 | Spotify login confirmed working — root cause was commented-out HTTPS line in server .env; local .env synced | env-only |
 | 2026-06-02 | Credential leak remediation — Spotify secret + Adzuna key rotated, corpus-handoff history wiped to single clean commit, all handoff docs scrubbed to placeholders, three-tier credential rule added | docs-only |
+| 2026-06-02 | Session protocols + standing rules added to handoff doc and CC memory; MEMORY.md index updated | docs-only |
 
 ---
 
