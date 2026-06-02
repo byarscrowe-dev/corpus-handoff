@@ -251,6 +251,9 @@ After any commit that changes functionality, routes, known issues, or project st
 6. In the corpus-handoff repo: `git add CORPUS_HANDOFF_FULL.md && git commit -m "update handoff doc" && git push origin main`
 7. Push the main private repo: `git push`
 
+**CREDENTIAL RULE — never negotiate this:**
+This document is mirrored to a public GitHub repo. It must never contain real secret values. SPOTIFY_CLIENT_SECRET, SPOTIFY_CLIENT_ID, ADZUNA_APP_ID, ADZUNA_APP_KEY, SECRET_KEY, and DASHBOARD_PASSWORD must always appear as `<see /opt/corpus/.env — never commit>`. If any update would write an actual secret value into this document, use the placeholder instead and do not deviate from this rule.
+
 **The public URL main chat reads:**
 `https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md`
 
@@ -275,6 +278,7 @@ After any commit that changes functionality, routes, known issues, or project st
 | 2026-06-01 | HTTPS + Basic Auth via nginx, DuckDNS domain (corpusbc.duckdns.org), source_url XSS fix, all audit findings resolved | 6bf3e57 |
 | 2026-06-01 | Fix Spotify redirect_uri — remove hardcoded localhost fallback, read SPOTIFY_REDIRECT_URI from env only | 22b4a52 |
 | 2026-06-01 | Spotify login confirmed working — root cause was commented-out HTTPS line in server .env; local .env synced | env-only |
+| 2026-06-02 | Credential leak remediation — Spotify secret + Adzuna key rotated, corpus-handoff history wiped to single clean commit, all handoff docs scrubbed to placeholders, three-tier credential rule added | docs-only |
 
 ---
 
@@ -293,6 +297,7 @@ After any commit that changes functionality, routes, known issues, or project st
 | 9 | No HTTPS — all traffic in cleartext | `[ RESOLVED — Let's Encrypt 2026-06-01 ]` | TLS cert via certbot for `corpusbc.duckdns.org`. Auto-renews via certbot.timer. Expires 2026-08-30. |
 | 10 | `/refresh-jobs` unauthenticated GET triggers scraping | `[ RESOLVED — nginx Basic Auth 2026-06-01 ]` | Covered by nginx Basic Auth — same as issue 7. |
 | 11 | `source_url` XSS — `javascript:` scheme possible in job URLs | `[ RESOLVED — 6bf3e57 ]` | `jobs.html` now only renders `<a href>` when `source_url` starts with `http://` or `https://`. Any other scheme is silently dropped. |
+| 12 | Credentials (Adzuna + Spotify) committed to public corpus-handoff repo | `[ RESOLVED — 2026-06-02 ]` | GitGuardian flagged the exposure. Spotify secret rotated (2026-06-01), Adzuna key rotated (2026-06-02). corpus-handoff history wiped to single clean commit (f90319e). All handoff docs scrubbed to placeholders. Three-tier credential rule added to protocol. |
 
 ---
 
@@ -313,6 +318,7 @@ After any commit that changes functionality, routes, known issues, or project st
 | HTTPS + nginx Basic Auth over per-route Flask auth | Single `auth_basic` block in nginx protects every route including the previously public `/api/spotify/token`. Simpler than adding `@login_required` decorators to every Flask route. Auth happens at nginx before requests reach Python at all. | 2026-06-01 |
 | DuckDNS subdomain over paid domain | Let's Encrypt cannot issue certs for bare IP addresses. DuckDNS gives a free subdomain (`corpusbc.duckdns.org`) with instant setup — just a Google sign-in. No expiry as long as DuckDNS account is accessed monthly. | 2026-06-01 |
 | Active nginx config is `/etc/nginx/sites-available/corpus` not `default` | On this server, `sites-enabled/corpus` is the active symlink. The `default` file exists but is not loaded. Future nginx changes must edit `corpus` specifically — editing `default` will have no effect. | 2026-06-01 |
+| Three-tier credential model: secrets in `.env` only, private context in CC memory files (never pushed), shareable context in public handoff doc — real secret values must never appear in the handoff doc | GitGuardian flagged Adzuna + Spotify credentials committed to the public corpus-handoff repo. The handoff doc is mirrored publicly for main-chat cold-start and must never hold real values. Actual credentials live only in `/opt/corpus/.env` (server) and local `.env` (gitignored). CC memory files and memory/ are private and can hold sensitive operational context but are never pushed to the public repo. | 2026-06-02 |
 
 ---
 
