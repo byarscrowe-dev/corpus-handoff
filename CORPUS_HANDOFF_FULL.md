@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-01 | Commit: 22b4a52*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-01 | Commit: 3666801*
 
 ---
 
@@ -246,8 +246,7 @@ CC reads all memory files, then fetches SESSION LOG and IMMEDIATE NEXT ACTIONS f
 **End:** CC auto-updates the source of truth and pushes both repos per the handoff protocol below. Confirm both pushes succeeded. Nothing required from the user.
 
 ### New Main Chat Session (always inside the CORPUS project)
-**Start:** User opens with: *"Read the CORPUS handoff doc at https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md, then ask what I want to work on."*
-**Stale doc check:** Raw GitHub URL caches for a few minutes after a push. Authoritative check: `https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md`
+**Start:** User opens with: *"Fetch the CORPUS handoff doc at https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md. If it shows a commit older than a week, verify against the browser view at https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md (the raw URL sometimes lags due to GitHub cache). Once you have the current version, you're calibrated. Then ask what I want to work on."*
 **End:** Nothing required. Decisions/plans that must persist get logged by CC via a user prompt. Main chat reads the source of truth but cannot write to it — only CC writes.
 
 ### Standing Rules (always apply)
@@ -298,6 +297,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-01 | Spotify login confirmed working — root cause was commented-out HTTPS line in server .env; local .env synced | env-only |
 | 2026-06-02 | Credential leak remediation — Spotify secret + Adzuna key rotated, corpus-handoff history wiped to single clean commit, all handoff docs scrubbed to placeholders, three-tier credential rule added | docs-only |
 | 2026-06-02 | Session protocols + standing rules added to handoff doc and CC memory; MEMORY.md index updated | docs-only |
+| 2026-06-01 | Updated main-chat session start protocol — stale-doc check now uses commit age (>1 week) instead of immediate verify | docs-only |
 
 ---
 
