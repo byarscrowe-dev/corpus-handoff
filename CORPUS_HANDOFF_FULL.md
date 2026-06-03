@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-01 | Commit: 3666801*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-03 | Commit: 3d23f9d*
 
 ---
 
@@ -48,8 +48,8 @@ A private personal dashboard — Flask/SQLite web app hosting multiple internal 
 **GitHub:** https://github.com/byarscrowe-dev/Corpus.git (private)
 **Local path:** `C:\Users\Byars\Clau Playgroun\First proj empty foler\`
 **Server path:** `/opt/corpus/`
-**Stack:** Flask + SQLite → gunicorn → nginx → Ubuntu 24.04, DigitalOcean NYC1 ($4/mo)
-**Branch:** master | **Current commit:** 22b4a52
+**Stack:** Flask + SQLite → gunicorn → nginx → Ubuntu 24.04, DigitalOcean NYC1
+**Branch:** master | **Current commit:** 3d23f9d
 
 ---
 
@@ -61,7 +61,7 @@ All project identities are defined in the `PROJECTS` dict at the top of `app.py`
 |----|------|--------|-------|-------|-------------|
 | RE_A | RE_A | ACTIVE | `#00ff88` | `/dashboard` | CRE job search agent |
 | B | Project B | PLACEHOLDER | `#1a7fff` | `/project-b` | Prediction Market Arbitrage Bot |
-| C | Project C | PLACEHOLDER | `#ff8800` | `/project-c` | Stock Market Modeling & Trading Agents |
+| C | Project C | ACTIVE | `#ff8800` | `/project-c` | Stock trading simulation lab — Phase 1 live |
 | D | Project D | PLACEHOLDER | `#ff3535` | `/project-d` | Artistic / Creative Project |
 | E | Project E | PLACEHOLDER | `#00c8e8` | `/project-e` | Automated Media Clipper |
 | F | Project F | PLACEHOLDER | `#e8c400` | `/project-f` | HTML Mini Game |
@@ -82,11 +82,13 @@ ssh root@137.184.211.205
 
 **Standard deploy:**
 ```powershell
-git add .
+git add <specific files>
 git commit -m "message"
 git push
-.\deploy.ps1
+powershell -File deploy.ps1
 ```
+
+**Note:** Use `powershell -File deploy.ps1`, NOT `.\deploy.ps1` — the dot-slash form fails in Claude Code's bash context.
 
 **Update .env only:** `.\update_env.ps1`
 
@@ -109,15 +111,14 @@ ssh root@137.184.211.205 "tail -20 /tmp/corpus_job_refresh.log"
 **Hard constraints:**
 - JobSpy must stay installed with `--no-deps` — never reinstall normally
 - Never trigger job refresh from the browser — 504 timeout. SSH or scheduler only
-- `dashboard.db` is the only database — `corpus.db` was a stray, deleted
+- `dashboard.db` is the only database — WAL mode enabled; never raw-`cp` it (use `sqlite3 .backup`)
 - Never force-push to master — no recovery branch
-- No swap on VPS (458MB RAM) — add if scraping becomes unstable: `fallocate -l 1G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile`
-- Basic Auth covers ALL routes including `/api/*` — there is no bypass without editing `/etc/nginx/sites-available/corpus`. Removing `auth_basic` from that file would re-expose the Spotify token endpoint publicly.
+- Git hygiene: stage only the specific files being changed — never accidentally commit `linkedin_connections.csv`, `.claude/settings.local.json`, or `playlists/*.csv`
+- Basic Auth covers ALL routes including `/api/*` — there is no bypass without editing `/etc/nginx/sites-available/corpus`
 
 **Server .env:**
-Credentials live in `/opt/corpus/.env` on the server and in the local `.env` file. They must never be written into this document.
+Credentials live in `/opt/corpus/.env` on the server and in the local `.env` file. They must never be written into this document. Authentication is nginx Basic Auth — `DASHBOARD_PASSWORD` is a dead variable and not needed.
 ```
-DASHBOARD_PASSWORD=<see /opt/corpus/.env — never commit>
 SECRET_KEY=<see /opt/corpus/.env — never commit>
 ADZUNA_APP_ID=<see /opt/corpus/.env — never commit>
 ADZUNA_APP_KEY=<see /opt/corpus/.env — never commit>
@@ -127,14 +128,13 @@ SPOTIFY_REDIRECT_URI=https://corpusbc.duckdns.org/callback
 ```
 
 **SECURITY / NGINX:**
-- Active config: `/etc/nginx/sites-available/corpus` — NOT `default`. The `sites-enabled/corpus` symlink is active; `default` is not loaded. All future nginx edits must target the `corpus` file.
-- Basic Auth: realm `CORPUS`, credentials at `/etc/nginx/.htpasswd`, username `byars`. Protects every route — all pages and all `/api/*` endpoints. Auth happens at nginx before requests reach Python.
+- Active config: `/etc/nginx/sites-available/corpus` — NOT `default`.
+- Basic Auth: realm `CORPUS`, credentials at `/etc/nginx/.htpasswd`, username `byars`. Protects every route and every `/api/*` endpoint at nginx level before requests reach Python.
   - To regenerate password if lost: `ssh root@137.184.211.205 "htpasswd /etc/nginx/.htpasswd byars && nginx -s reload"`
 - SSL cert: `/etc/letsencrypt/live/corpusbc.duckdns.org/fullchain.pem`
-- SSL key: `/etc/letsencrypt/live/corpusbc.duckdns.org/privkey.pem`
-- Cert expiry: 2026-08-30. Auto-renewal via `certbot.timer` systemd timer — no manual action needed.
-- Firewall (UFW): allows 22 (SSH), 80 (HTTP → HTTPS redirect), 443 (HTTPS). Port 443 was previously closed; adding it fixed initial 000 connection failures.
-- gunicorn binds to `127.0.0.1:5000` (confirmed from systemd service — NOT 8000)
+- Cert expiry: 2026-08-30. Auto-renewal via `certbot.timer` — no manual action needed.
+- Firewall (UFW): allows 22, 80, 443.
+- gunicorn binds to `127.0.0.1:5000`
 
 **Files that live only on server (not in git):**
 ```
@@ -142,6 +142,7 @@ SPOTIFY_REDIRECT_URI=https://corpusbc.duckdns.org/callback
 /opt/corpus/.spotify_cache
 /opt/corpus/linkedin_connections.csv
 /opt/corpus/playlists/*.csv
+/opt/corpus/price_cache/              ← Project C yfinance JSON cache
 /opt/corpus/spotify_health_cache.json
 /opt/corpus/analytics_cache.json
 /opt/corpus/.playlist_id_cache.json
@@ -153,16 +154,13 @@ SPOTIFY_REDIRECT_URI=https://corpusbc.duckdns.org/callback
 
 **Philosophy:** CORPUS means "the body as operating system." The interface is not a window to something else — it IS the data materialized. Serious, precise, alive beneath the surface. Not corporate, not decorative. Every element earns its place.
 
-Reference aesthetic: RECORDING.ini terminal (phosphor green on black), ISS interior (cold institutional blue), magnetic core memory (a face emerging from a grid).
-
 **Base:** `#0f1419` (deep navy, not pure black)
-**Font:** Monospace throughout — JetBrains Mono or similar. All caps for labels.
+**Font:** Monospace throughout. All caps for labels.
 **Shape:** No rounded corners. Everything rectilinear. 1px chrome borders.
-**Labels:** Bracketed notation only — `[ ACTION ]` `[ ACTIVE ]` `[ REFRESH ]` `[ PLACEHOLDER ]`
+**Labels:** Bracketed notation only — `[ ACTION ]` `[ ACTIVE ]` `[ REFRESH ]`
 **Layout:** Strict grid. Dense information as aesthetic — instruments, not landing pages.
-**Cards:** Each project card is a distinct color territory, slightly tinted, with a 3x3 dot grid at low opacity in the project color.
-**Spectrum stripe:** All project colors in sequence across the top of every page.
-**Breadcrumb:** `CORPUS / PROJECT NAME / PAGE` on every page top bar.
+**Cards:** Each project card is a distinct color territory with a 3x3 dot grid in the project color.
+**Breadcrumb:** `CORPUS / PROJECT NAME / PAGE` on every page.
 **Sidebar:** Two layers — outer (project nav) + inner (tab nav for current project).
 
 **Always read `docs/design_brief.md` before any visual work.**
@@ -179,11 +177,67 @@ Reference aesthetic: RECORDING.ini terminal (phosphor green on black), ISS inter
 
 **Scoring:** HIGH ≥ 20 | MED 12–19 (must also have CRE keyword in description) | LOW < 12 (hidden)
 
-**Network matching:** `linkedin_connections.csv` — 429 connections. When a job's company matches a connection's employer, `connection_flag=1` and name is stored. Green badge appears on listing.
+**Network matching:** `linkedin_connections.csv` — 429 connections. When a job's company matches a connection's employer, `connection_flag=1` and name is stored.
 
-**Scheduler:** CronTrigger at 8:00 AM America/Chicago daily. Spotify sync runs every 24h starting 24h after last restart.
+**Scheduler:** CronTrigger at 8:00 AM America/Chicago daily. Never trigger via browser — 504 timeout.
 
 **Key files:** `job_agent.py`, `company_scrapers.py`
+
+---
+
+## PROJECT C — STOCK TRADING SIMULATION LAB
+
+**Route:** `/project-c` | **Status:** ACTIVE — Phase 1 complete 2026-06-03
+
+Multi-bot stock trading simulation. Each bot starts with $100k fake cash and runs a different strategy. Equity curves accumulate over time on a comparison chart with a leaderboard vs. SPY. Phase 1 is pure simulation — no real money, no live broker.
+
+### Bots
+
+| bot_id | Strategy | Key config | Notes |
+|---|---|---|---|
+| spy_benchmark | Buy & Hold SPY | SPY only, all-in, no stop-loss | Benchmark reference line |
+| momentum | MA Crossover | SP500_100, fast=20/slow=50 SMA, 10% size, stop-loss 7% | |
+| momentum_v2 | MA Crossover | SP500_100, fast=20/slow=80 SMA, 10% size, stop-loss 7% | Wider window to cut whipsaw |
+| twitter_x | — | — | Shelved — X API restrictions |
+
+### First backtest results (2022-01-03 → 2024-12-31)
+
+| Bot | Return | Max Drawdown |
+|---|---|---|
+| momentum | +39.00% | -22.05% |
+| spy_benchmark | +27.76% | — |
+| momentum_v2 | +13.55% | — |
+
+Results are **survivorship-biased** (current SP500_100 universe). UI carries this note.
+
+### Architecture highlights
+
+- 6 new DB tables: c_bots, c_trades, c_equity_snapshots, c_positions, c_portfolio_state, c_pending_orders
+- Strict mode isolation: backtest never touches c_positions, c_portfolio_state, or c_pending_orders
+- T+1 execution: signals queue orders; orders fill at next day's open — no same-day fills
+- Backtest idempotency: re-run replaces old backtest rows for that bot — safe to re-run from UI
+- Forward idempotency guard: checks for existing today's snapshot; calling run_forward_step multiple times is safe
+- SPY-derived trading calendar — no external calendar dependency
+- yfinance price source with JSON file cache in `price_cache/` (gitignored)
+- **Variant rule:** serious strategy change = new bot_id; never edit a bot with live forward history
+
+### Scheduler
+
+`run_all_forward_bots` fires at **6:00 PM CT weekdays** (3h after market close — yfinance data has propagated). First run 2026-06-03. Forward rows are append-only.
+
+### Project C routes
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/project-c` | GET | Main page — leaderboard, equity curves, per-bot tabs, ENGINE tab |
+| `/api/project-c/equity-data` | GET | All snapshots grouped by bot_id + mode (Chart.js data) |
+| `/api/project-c/bot/<bot_id>` | GET | Per-bot metrics, live positions with current price, last 50 trades |
+| `/api/project-c/backtest/run` | POST | `{bot_id, start_date, end_date}` — fire backtest |
+| `/api/project-c/backtest/status` | GET | `{running, bot_id, pct}` — poll progress |
+
+### Phase 2+ roadmap (each needs a design session)
+
+Capitol Trades political disclosure bot → Claude-static bots → GDELT news bot → 13F follower → Claude Live API bot → AI-ETF mirror bot. `stock_ingest.py` stub is already in place for Phase 2.
 
 ---
 
@@ -192,12 +246,7 @@ Reference aesthetic: RECORDING.ini terminal (phosphor green on black), ISS inter
 **Route:** `/project-g`
 **5 tabs:** PLAYLISTS | SYNC | ANALYTICS | DISCOVER | MOOD
 **6 macro playlists:** Rap Old School, Rap New Era, Rock Classic, Rock Modern, Electronic Dance, Late Night Melancholy (~2809 songs total)
-**Web Playback SDK:** Persistent player widget fixed bottom-right on ALL CORPUS pages. Device name: "CORPUS". Requires Spotify Premium (confirmed). Auto-expands on the Spotify Orbit page. All SDK lifecycle events log to browser console with `[CORPUS Player]` prefix.
-
-**Button layout:**
-- PLAYLISTS tab: playlist cards with `[ PLAY ]` buttons only (no toolbar buttons)
-- SYNC tab: `[ SYNC NOW ]` + `[ REFRESH PLAYLISTS ]` + `[ IMPORT MACROS ]`
-- ANALYTICS tab: `[ REFRESH ]` (triggers background 2809-song analysis)
+**Web Playback SDK:** Persistent player widget fixed bottom-right on all CORPUS pages. Requires Spotify Premium (confirmed).
 
 **Critical API fixes — never revert:**
 - Use `sp._post('me/playlists')` not deprecated `user_playlist_create`
@@ -207,13 +256,7 @@ Reference aesthetic: RECORDING.ini terminal (phosphor green on black), ISS inter
 - Audio features API returns 403 in dev/non-quota mode since Nov 2024 — energy/valence bars showing 0 is expected, not a bug
 - `retries=0` on Spotipy client — prevents 14-hour thread blocks on rate limit
 
-**Caching architecture:**
-- `spotify_health_cache.json` — playlist health + URIs, 1h TTL
-- `analytics_cache.json` — 2809-song analysis, 24h TTL
-- `.playlist_id_cache.json` — playlist name→ID mapping, 24h TTL
-- All refreshes are fire-and-poll async — never block page render on Spotify API calls
-
-**Spotify routes:** `/spotify/login`, `/spotify/callback`, `/callback` (alias), `/api/spotify/status`, `/api/spotify/token`, `/api/spotify/playlists`, `/api/spotify/playlists/refresh`, `/api/spotify/profile`, `/api/spotify/profile/refresh`, `/api/spotify/similar/<playlist>`, `/api/spotify/mood` (POST), `/api/spotify/import`, `/api/spotify/play-playlist` (POST), `/api/spotify/transfer-playback` (POST)
+**Caching:** `spotify_health_cache.json` (1h), `analytics_cache.json` (24h), `.playlist_id_cache.json` (24h). All refreshes are fire-and-poll async.
 
 ---
 
@@ -221,7 +264,7 @@ Reference aesthetic: RECORDING.ini terminal (phosphor green on black), ISS inter
 
 Location: `C:\Users\Byars\.claude\projects\c--Users-Byars-Clau-Playgroun-First-proj-empty-foler\memory\`
 
-Always begin every CC session with: **"Please read all memory files first for full context."**
+Always begin every CC session with: **"Read all memory files first for full context, including handoff_protocol.md."**
 
 | File | Contents |
 |------|----------|
@@ -231,8 +274,9 @@ Always begin every CC session with: **"Please read all memory files first for fu
 | vps_setup.md | Server IP, stack, SSH, deployment flow |
 | projects_overview.md | All A–K project statuses |
 | project_re_a.md | Scraping layers, scoring, LinkedIn, scheduler |
+| project_c.md | Stock trading lab — bots, architecture, conventions, roadmap |
 | project_g_spotify.md | Spotify API fixes, auth, never-revert list |
-| audit_findings.md | VPS audit 2026-05-29, fixes applied, open items |
+| audit_findings.md | VPS audit 2026-05-29 + 2026-06-03 housekeeping |
 | handoff_protocol.md | GitHub push protocol — read at session start, follow after every commit |
 | design_brief.md | CORPUS visual design system — read before any visual or UI work |
 
@@ -269,17 +313,10 @@ After any commit that changes functionality, routes, known issues, or project st
 7. Push the main private repo: `git push`
 
 **CREDENTIAL RULE — never negotiate this:**
-This document is mirrored to a public GitHub repo. It must never contain real secret values. SPOTIFY_CLIENT_SECRET, SPOTIFY_CLIENT_ID, ADZUNA_APP_ID, ADZUNA_APP_KEY, SECRET_KEY, and DASHBOARD_PASSWORD must always appear as `<see /opt/corpus/.env — never commit>`. If any update would write an actual secret value into this document, use the placeholder instead and do not deviate from this rule.
+This document is mirrored to a public GitHub repo. It must never contain real secret values. All credentials must appear as `<see /opt/corpus/.env — never commit>`.
 
 **The public URL main chat reads:**
 `https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md`
-
-**What to update:**
-- Git restore points table — add new commit hash and description
-- Known issues — mark resolved issues `[ RESOLVED — commit ]`, add new ones as `[ OPEN ]`
-- Projects A–K table — if any project changed status
-- Immediate next actions — reflect what should happen next session
-- Decision log — record any architectural decisions made and why
 
 ---
 
@@ -297,7 +334,11 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-01 | Spotify login confirmed working — root cause was commented-out HTTPS line in server .env; local .env synced | env-only |
 | 2026-06-02 | Credential leak remediation — Spotify secret + Adzuna key rotated, corpus-handoff history wiped to single clean commit, all handoff docs scrubbed to placeholders, three-tier credential rule added | docs-only |
 | 2026-06-02 | Session protocols + standing rules added to handoff doc and CC memory; MEMORY.md index updated | docs-only |
-| 2026-06-01 | Updated main-chat session start protocol — stale-doc check now uses commit age (>1 week) instead of immediate verify | docs-only |
+| 2026-06-03 | Project C Phase 0b — WAL mode, 6 DB tables, stubs, /project-c UI skeleton deployed | 58430f7 |
+| 2026-06-03 | Project C Phase 1 Steps 1–2 — stock_price.py (yfinance cache, SPY calendar) + stock_broker.py | 1230462 |
+| 2026-06-03 | Project C Phase 1 Steps 3–4 — engine, strategies, app wiring, API routes, full UI live (96 tests total) | 3d23f9d |
+| 2026-06-03 | VPS resized 512MB → 2GB RAM + 2GB swap; sqlite3 installed; .env cleaned; DB backups at /root/corpus_backups/ | server-only |
+| 2026-06-03 | First backtests run via UI: momentum +39.00%, SPY +27.76%, momentum_v2 +13.55% (2022-01-03 → 2024-12-31) | UI-only |
 
 ---
 
@@ -305,18 +346,17 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 
 | # | Issue | Status | Notes |
 |---|-------|--------|-------|
-| 1 | Play buttons exist but URIs empty until cache populated | `[ OPEN ]` | Click `[ REFRESH PLAYLISTS ]` on Sync tab first — populates health cache with URI field. After that `[ PLAY ]` works. |
-| 2 | Analytics tab shows "NO DATA" | `[ OPEN ]` | Click `[ REFRESH ]` on Analytics tab — runs 2809-song background analysis, ~1-2 min |
+| 1 | Play buttons exist but URIs empty until cache populated | `[ RESOLVED ]` | Click `[ REFRESH PLAYLISTS ]` on Sync tab confirmed working |
+| 2 | Analytics tab shows "NO DATA" | `[ RESOLVED ]` | Click `[ REFRESH ]` on Analytics tab — confirmed working |
 | 3 | Job count low on dashboard | `[ OPEN ]` | Adzuna duplicate credentials fixed. Wait for 8 AM CT daily scheduler run. Never use browser Refresh Jobs. |
 | 4 | Audio feature bars show 0 | `[ KNOWN LIMITATION ]` | Spotify audio features API returns 403 in dev mode since Nov 2024. Not fixable without Extended Quota approval |
-| 5 | No swap memory on VPS | `[ OPEN — non-urgent ]` | 458MB RAM, 0 swap. Add 1GB swap if scraping causes OOM |
-| 6 | Spotify SDK player shows NOT CONNECTED or CONNECT FAILED | `[ OPEN ]` | Redirect URI fix confirmed working — `https://corpusbc.duckdns.org/spotify/login` shows Spotify connected banner. Root cause: server `.env` had old `http://127.0.0.1:5000/callback` uncommented while HTTPS line was commented out. Fixed on server via sed; local `.env` synced. Code (22b4a52) now reads `SPOTIFY_REDIRECT_URI` with no fallback. Re-authenticate if token expires: visit `https://corpusbc.duckdns.org/spotify/login`. |
-| 7 | No authentication on any route | `[ RESOLVED — nginx Basic Auth 2026-06-01 ]` | All routes including API endpoints now require HTTP Basic Auth at nginx level before reaching Python. |
-| 8 | `/api/spotify/token` publicly exposed | `[ RESOLVED — nginx Basic Auth 2026-06-01 ]` | Covered by nginx Basic Auth — same as issue 7. |
-| 9 | No HTTPS — all traffic in cleartext | `[ RESOLVED — Let's Encrypt 2026-06-01 ]` | TLS cert via certbot for `corpusbc.duckdns.org`. Auto-renews via certbot.timer. Expires 2026-08-30. |
-| 10 | `/refresh-jobs` unauthenticated GET triggers scraping | `[ RESOLVED — nginx Basic Auth 2026-06-01 ]` | Covered by nginx Basic Auth — same as issue 7. |
-| 11 | `source_url` XSS — `javascript:` scheme possible in job URLs | `[ RESOLVED — 6bf3e57 ]` | `jobs.html` now only renders `<a href>` when `source_url` starts with `http://` or `https://`. Any other scheme is silently dropped. |
-| 12 | Credentials (Adzuna + Spotify) committed to public corpus-handoff repo | `[ RESOLVED — 2026-06-02 ]` | GitGuardian flagged the exposure. Spotify secret rotated (2026-06-01), Adzuna key rotated (2026-06-02). corpus-handoff history wiped to single clean commit (f90319e). All handoff docs scrubbed to placeholders. Three-tier credential rule added to protocol. |
+| 5 | No swap memory on VPS | `[ RESOLVED — 2026-06-03 ]` | VPS resized to 2GB RAM + 2GB swap |
+| 6 | Spotify SDK player shows NOT CONNECTED | `[ RESOLVED — 22b4a52 ]` | Redirect URI fix confirmed working. Re-authenticate if token expires: visit `https://corpusbc.duckdns.org/spotify/login` |
+| 7 | No authentication on any route | `[ RESOLVED — nginx Basic Auth 2026-06-01 ]` | All routes protected at nginx level |
+| 8 | No HTTPS — all traffic in cleartext | `[ RESOLVED — Let's Encrypt 2026-06-01 ]` | TLS cert via certbot for `corpusbc.duckdns.org`. Auto-renews. Expires 2026-08-30. |
+| 9 | `source_url` XSS — `javascript:` scheme possible in job URLs | `[ RESOLVED — 6bf3e57 ]` | `jobs.html` only renders `<a href>` when scheme is http/https |
+| 10 | Credentials committed to public corpus-handoff repo | `[ RESOLVED — 2026-06-02 ]` | Keys rotated, history wiped, three-tier credential rule enforced |
+| 11 | `deploy.ps1` prints bare IP at end | `[ OPEN — cosmetic ]` | Change to print `https://corpusbc.duckdns.org` |
 
 ---
 
@@ -326,26 +366,29 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Decision | Rationale | Date |
 |----------|-----------|------|
 | JobSpy installed with `--no-deps` | numpy/tls-client conflict breaks standard install. This is the only working approach | early |
-| Job refresh runs on scheduler, never via browser | Browser requests 504 after 120s — scraping takes 3-5 min. Scheduler runs detached | early |
+| Job refresh runs on scheduler, never via browser | Browser requests 504 after 120s — scraping takes 3-5 min | early |
 | Spotify sync delayed 24h after restart | Prevents hammering Spotify API on every service restart | 2026-05-29 |
-| Async fire-and-poll for all Spotify refresh operations | Spotify API calls too slow to block page render. Background threads + polling pattern | 2026-05-29 |
-| Single gunicorn worker | Background threads (Spotify refresh, analytics) share the worker. Adding workers would break shared state | 2026-05-29 |
-| `dashboard.db` only — `corpus.db` deleted | `corpus.db` was a stray empty file created accidentally. `dashboard.db` is the correct database | 2026-05-29 |
-| Split playlist functionality removed entirely | Byars will never use it. Removed from UI, routes, and agent | 2026-05-30 |
-| PROJECTS registry dict in app.py | Single source of truth for all project identities (full_name, system_name, acronym, color, status, endpoint, css_key). Templates loop it — no labels hardcoded anywhere. Prevents drift between sidebar, cards, and breadcrumbs. | 2026-05-30 |
-| Handoff doc moved from Google Drive to public GitHub repo | Drive MCP has no update tool — every write creates a new file with a new ID, causing drift. GitHub push is atomic, versioned, and fetchable by main chat via raw URL without any MCP dependency. | 2026-05-30 |
-| HTTPS + nginx Basic Auth over per-route Flask auth | Single `auth_basic` block in nginx protects every route including the previously public `/api/spotify/token`. Simpler than adding `@login_required` decorators to every Flask route. Auth happens at nginx before requests reach Python at all. | 2026-06-01 |
-| DuckDNS subdomain over paid domain | Let's Encrypt cannot issue certs for bare IP addresses. DuckDNS gives a free subdomain (`corpusbc.duckdns.org`) with instant setup — just a Google sign-in. No expiry as long as DuckDNS account is accessed monthly. | 2026-06-01 |
-| Active nginx config is `/etc/nginx/sites-available/corpus` not `default` | On this server, `sites-enabled/corpus` is the active symlink. The `default` file exists but is not loaded. Future nginx changes must edit `corpus` specifically — editing `default` will have no effect. | 2026-06-01 |
-| Three-tier credential model: secrets in `.env` only, private context in CC memory files (never pushed), shareable context in public handoff doc — real secret values must never appear in the handoff doc | GitGuardian flagged Adzuna + Spotify credentials committed to the public corpus-handoff repo. The handoff doc is mirrored publicly for main-chat cold-start and must never hold real values. Actual credentials live only in `/opt/corpus/.env` (server) and local `.env` (gitignored). CC memory files and memory/ are private and can hold sensitive operational context but are never pushed to the public repo. | 2026-06-02 |
+| Async fire-and-poll for all Spotify refresh operations | Spotify API calls too slow to block page render | 2026-05-29 |
+| Single gunicorn worker | Background threads share the worker. Adding workers would break shared state | 2026-05-29 |
+| `dashboard.db` only | `corpus.db` was a stray empty file, deleted | 2026-05-29 |
+| PROJECTS registry dict in app.py | Single source of truth for all project identities. Templates loop it — no labels hardcoded | 2026-05-30 |
+| Handoff doc moved from Google Drive to public GitHub repo | Drive MCP has no update tool — creates new file on every write. GitHub push is atomic, versioned, and fetchable by main chat via raw URL | 2026-05-30 |
+| HTTPS + nginx Basic Auth over per-route Flask auth | Single `auth_basic` block in nginx protects every route. Simpler than adding `@login_required` decorators everywhere | 2026-06-01 |
+| DuckDNS subdomain over paid domain | Let's Encrypt cannot issue certs for bare IPs. DuckDNS gives a free subdomain with instant setup | 2026-06-01 |
+| Three-tier credential model | GitGuardian flagged Adzuna + Spotify credentials in the public corpus-handoff repo. Real values live only in `.env` files, never in any doc | 2026-06-02 |
+| SPY-derived trading calendar (no external dependency) | `pandas_market_calendars` adds complexity and a dependency; SPY's own price history is sufficient for all calendar needs | 2026-06-03 |
+| T+1 execution model | Real equity orders fill at next day's open, not same-day close. Using signal-day execution would overstate returns | 2026-06-03 |
+| Backtest idempotency: wipe + re-insert; forward rows append-only | Backtests need to be rerun safely; forward history is ground truth that must never be deleted | 2026-06-03 |
+| Bot variant rule: serious changes get a new bot_id | Editing a live bot's config stitches two strategies into one uninterpretable equity curve. New bot_id preserves clean, honest history for both variants | 2026-06-03 |
+| Stock tests run against throwaway DATABASE_PATH temp DB | Tests must never touch live financial data in dashboard.db — even with idempotency guards in place | 2026-06-03 |
 
 ---
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Verify `[ PLAY ]` buttons work on Spotify Orbit (Spotify login confirmed working)
-2. Verify Analytics tab functions (click `[ REFRESH ]` if NO DATA shown)
-3. Update `deploy.ps1` to print `https://corpusbc.duckdns.org` at the end instead of the old IP (cosmetic)
+1. Verify first automated forward run executed (2026-06-03, 6 PM CT) — check `journalctl -u corpus` and `sqlite3 /opt/corpus/dashboard.db "SELECT bot_id, snapshot_date, total_value FROM c_equity_snapshots WHERE mode='forward';"`
+2. Update `deploy.ps1` to print `https://corpusbc.duckdns.org` at the end instead of bare IP (cosmetic)
+3. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
 
 ---
 
@@ -354,18 +397,11 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 **Project B — Prediction Market Arbitrage Bot**
 Monitor Polymarket and Kalshi simultaneously for arbitrage opportunities — same event priced differently across platforms. Needs real-time price feeds, arbitrage detection layer, eventually trade execution. Open questions: event name mapping across platforms, fee structure minimum spread, rate limits.
 
-**Project C — Stock Market Modeling & Trading Agents**
-Multi-agent system, multiple bots running in parallel each with a different strategy. Phase 1 is pure simulation only — no real money. Specific bots pitched:
-- Political Disclosure Tracker: shadows Trump and prominent senators' disclosed trades via STOCK Act filings. Data via QuiverQuant or Capitol Trades. Model what mirroring each trade with N-day lag would have returned.
-- Other bot types TBD — momentum, earnings catalyst, sector rotation, insider filing trackers, sentiment-based, macro signal.
-- Long-term goal: adaptive/learning behavior — bots adjust weights based on what's working.
-- UI: multiple sub-pages similar to RE_A's tab structure. Master dashboard comparing all bots side by side.
-
 **Project E — Automated Media Clipper**
 Monitor YouTube channels for new uploads, identify highlight moments, clip and process into short-form vertical video, auto-post to TikTok and Instagram. Open research needed: clip identification method, YouTube ToS on reclipping, copyright avoidance for monetization, TikTok/Instagram posting APIs.
 
 **Project K — Property Locator System**
-Multi-bot system for undervalued DFW properties. First bot: underpriced duplexes evaluated on price-to-rent ratio and cap rate. Future bots: small multifamily, commercial land, distressed, off-market. Data sources: Zillow API, Redfin, DFW MLS, ATTOM Data, CoStar.
+Multi-bot system for undervalued DFW properties. First bot: underpriced duplexes evaluated on price-to-rent ratio and cap rate. Future bots: small multifamily, commercial land, distressed, off-market.
 
 **Network graph for RE_A**
 Design brief specifically calls this out. LinkedIn connections as a living graph — companies as nodes, connections as edges, colored by industry/relationship strength. Data already exists.
@@ -382,34 +418,24 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
-| 5ba1b22 | v0.1: Initial snapshot | early |
-| 796694d | v0.2.1: Navigation redesign, homepage, login removed | early |
-| ac28571 | v0.3: Title concat fix, salary display, CORPUS breadcrumb | early |
-| ef71532 | v0.4: Adzuna expanded to 27 queries | early |
-| 1e39208 | v0.5: CRE-specific search terms | early |
-| 9800510 | v0.6: Column sorting, compact date format | early |
-| a425590 | v0.7: LinkedIn network matching via CSV | early |
-| aa78d74 | v0.8.2: LinkedIn CSV preamble fix — 429 connections loading | early |
-| 9b72acf | v0.9: Project K added, Spotify deployment scripts | early |
-| 0ac05bc | v1.0: Project G — full Spotify agent | early |
-| 8fe430c | Fix Spotify API compat — 403s, deprecated endpoints, track key | early |
-| 2660556 | Perf: get_playlist_health uses limit=1 for speed | 2026-05-29 |
-| 822ecbb | Hotfix: auth_manager= fix, prevents 401 on token expiry | 2026-05-29 |
-| b0ddfa3 | Hotfix: defer Spotify sync scheduler 24h after startup | 2026-05-29 |
-| 113e253 | Async playlist refresh — fire-and-poll pattern | 2026-05-29 |
-| 70d27bb | Eliminate Spotify network call on Project G page render | 2026-05-29 |
-| 6222533 | Health cache endpoint — instant load | 2026-05-29 |
-| 44b6f36 | Playlist ID cache + 45s timeout | 2026-05-29 |
-| bb51f60 | Fix deploy.ps1: safe.directory before git pull | 2026-05-29 |
-| 730e2fe | Rate limit hotfix: retries=0, Spotify sync 24h delay | 2026-05-29 |
-| cc80bc7 | CronTrigger 8AM CT, timezone display in CT | 2026-05-29 |
-| 460b36a | Play buttons, analytics cache, Sp_O sidebar, Adzuna fix | 2026-05-30 |
+| 3d23f9d | Project C Step 4 — app wiring, API routes, full UI live (43 tests) | 2026-06-03 |
+| a1cc9a7 | Project C Step 3 — strategies, engine, test suite (53 tests) | 2026-06-03 |
+| 1230462 | Project C Step 2 — BacktestBroker + SimulatedBroker | 2026-06-03 |
+| 265e846 | Add 'tickers' explicit-list to resolve_tickers (test fixture support) | 2026-06-03 |
+| 340d97f | Project C Step 1 — stock_price.py + sp500_universe.csv | 2026-06-03 |
+| 58430f7 | Project C Phase 0b — WAL, 6 DB tables, stubs, /project-c UI skeleton | 2026-06-03 |
+| 22b4a52 | Fix Spotify redirect_uri — read from env only | 2026-06-01 |
+| 6bf3e57 | HTTPS + Basic Auth + source_url XSS fix | 2026-06-01 |
 | b000ed1 | Remove split playlist functionality from UI, routes, and agent | 2026-05-30 |
-| 37af94c | docs: add comprehensive project handoff document | 2026-05-30 |
-| 3e24d09 | feat: project registry + Spotify SDK fixes (logging, connect() promise, auto-expand) | 2026-05-30 |
-| a90b329 | docs: switch handoff to public GitHub repo, design_brief to memory | 2026-05-30 |
-| 6bf3e57 | security: sanitize job source_url XSS; HTTPS + Basic Auth fully deployed | 2026-06-01 |
-| 22b4a52 | fix: remove hardcoded Spotify redirect_uri fallback — read from env only | 2026-06-01 |
+| 3e24d09 | Project registry + Spotify SDK fixes (logging, connect() promise, auto-expand) | 2026-05-30 |
+| a90b329 | Switch handoff to public GitHub repo, design_brief to memory | 2026-05-30 |
+| 460b36a | Play buttons, analytics cache, Sp_O sidebar, Adzuna fix | 2026-05-30 |
+| cc80bc7 | CronTrigger 8AM CT, timezone display in CT | 2026-05-29 |
+| 730e2fe | Rate limit hotfix: retries=0, Spotify sync 24h delay | 2026-05-29 |
+| bb51f60 | Fix deploy.ps1: safe.directory before git pull | 2026-05-29 |
+| 0ac05bc | v1.0: Project G — full Spotify agent | early |
+| a425590 | v0.7: LinkedIn network matching via CSV | early |
+| 5ba1b22 | v0.1: Initial snapshot | early |
 
 ---
 
