@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: b5630dd*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: docs-only*
 
 ---
 
@@ -239,6 +239,14 @@ Results are **survivorship-biased** (current SP500_100 universe). UI carries thi
 
 Capitol Trades political disclosure bot → Claude-static bots → GDELT news bot → 13F follower → Claude Live API bot → AI-ETF mirror bot. `stock_ingest.py` stub is already in place for Phase 2.
 
+**Near-term pending bots (greenlit, no design session needed):** momentum_v3 (fast=20/slow=35 — tests the eager end; variant discipline: changes only slow_window). Random/chaos bot (scientific control — proves rules beat luck, not just SPY).
+
+**Variant discipline rule:** A variant changes EXACTLY ONE thing vs its parent. Non-varied params stay at genre house defaults. Multi-change variants are uninterpretable.
+
+**Claude-static caveat:** Any backtest of Claude-written bots is contaminated by Claude's hindsight knowledge of 2022-24 market events. Forward performance is the only honest grade.
+
+**Mode 2 — Population Search (long-term):** Large populations of randomized bots judged on forward results only. Requires fluke-control protocol before building: (a) winners must keep winning on new data for months; (b) larger populations need higher significance bar; (c) clone winners into near-variants to distinguish real edge from noise. Roadmap: genres → variants (Mode 1) → population search (Mode 2).
+
 ---
 
 ## SPOTIFY ORBIT (PROJECT G)
@@ -342,6 +350,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-03 | First automated forward run verified (ran=3 skipped=1 failed=0); per-bot metrics display bug logged | server-only |
 | 2026-06-04 | Fix Known Issue #12 — per-bot metrics now show backtest results when forward is day-one only; [BACKTEST]/[FORWARD] toggle added to metric cards; 10 new C24–C33 test assertions | ce2b5e5 |
 | 2026-06-04 | Fix Known Issue #12 (leaderboard instance) — OVERVIEW leaderboard now obeys chart mode toggle; statusBadge and populateLeaderboard accept mode param; default mode uses diverged-from-$100k check | b5630dd |
+| 2026-06-04 | Planning session — momentum_v3 greenlit; chaos bot greenlit; variant discipline rule; Mode 2 population search; bot genres; universe expansion; deploy.ps1 URL fix | docs-only |
 
 ---
 
@@ -391,8 +400,9 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Update `deploy.ps1` to print `https://corpusbc.duckdns.org` at the end instead of bare IP (cosmetic)
-2. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
+1. Build momentum_v3 (fast=20/slow=35) — easy, follows existing pattern; just add to BOT_REGISTRY and run backtest
+2. Build random/chaos bot — scientific control; forward_only; cheap
+3. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
 
 ---
 
@@ -406,6 +416,9 @@ Monitor YouTube channels for new uploads, identify highlight moments, clip and p
 
 **Project K — Property Locator System**
 Multi-bot system for undervalued DFW properties. First bot: underpriced duplexes evaluated on price-to-rent ratio and cap rate. Future bots: small multifamily, commercial land, distressed, off-market.
+
+**Project C — Bot genres for future ideation (design session before building each)**
+Calendar/seasonality effects; volatility-regime switching (different behavior in calm vs panicked markets); mean-reversion / anti-momentum (buy what crashed); insider-buying via SEC Form 4 (~2-day filing lag, less than Capitol Trades); sector-rotation; dividend-aristocrat tilt. Universe expansion to full S&P 500 (~5x nightly fetch, acceptable; does NOT fix backtest survivorship bias unless historical membership data added). Genre leaderboards UI once multiple genres exist.
 
 **Network graph for RE_A**
 Design brief specifically calls this out. LinkedIn connections as a living graph — companies as nodes, connections as edges, colored by industry/relationship strength. Data already exists.
