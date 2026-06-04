@@ -241,6 +241,10 @@ Capitol Trades political disclosure bot → Claude-static bots → GDELT news bo
 
 **Bots as of 2026-06-04 (10 total, 9 active):** Momentum ladder v1(50)/v2(80)/v3(35)/v4(40)/v5(25); chaos_random (uniform/sell=10%), chaos_lazy (uniform/sell=0%), chaos_hot (recent_winners/sell=10%); spy_benchmark; twitter_x (shelved). No backtests run yet on new bots — use UI. Forward starts at next 6 PM CT run.
 
+**Baseline backtest button:** `BASELINE_BACKTEST_START = '2022-01-03'`, `BASELINE_BACKTEST_END = '2024-12-31'` defined once in app.py — single source of truth. `POST /api/project-c/backtest/run` accepts `{"bot_id": ..., "baseline": true}` to use these constants server-side; start/end in payload ignored. [ RUN BASELINE 2022–2024 ] button appears next to [ RUN BACKTEST ] in both the per-bot tab and engine tab. All new bots should be baseline-tested so comparisons share one window.
+
+**Future — Multi-horizon robustness panel:** Four horizons (1/5/10/20-year) replacing the single baseline; four equity graphs on overview. Needs design session — survivorship bias worsens at long horizons; yfinance data gets patchy past ~20 years; rolling calendar questions. Baseline-constant pattern is the architectural seed.
+
 **Variant discipline rule:** A variant changes EXACTLY ONE thing vs its parent. Non-varied params stay at genre house defaults. Multi-change variants are uninterpretable.
 
 **Claude-static caveat:** Any backtest of Claude-written bots is contaminated by Claude's hindsight knowledge of 2022-24 market events. Forward performance is the only honest grade.
@@ -352,6 +356,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Fix Known Issue #12 (leaderboard instance) — OVERVIEW leaderboard now obeys chart mode toggle; statusBadge and populateLeaderboard accept mode param; default mode uses diverged-from-$100k check | b5630dd |
 | 2026-06-04 | Planning session — momentum_v3 greenlit; chaos bot greenlit; variant discipline rule; Mode 2 population search; bot genres; universe expansion; deploy.ps1 URL fix | docs-only |
 | 2026-06-04 | Six new bots live: momentum eagerness ladder v3(35)/v4(40)/v5(25) + chaos_random/lazy/hot; RandomStrategy with deterministic seeding + recent_winners mode; 54 new tests (159 total) | 6421560 |
+| 2026-06-04 | Baseline backtest button — BASELINE_BACKTEST_START/END constants in app.py; baseline:true API field; [ RUN BASELINE ] buttons in per-bot and engine tabs; 5 new test assertions (164 total) | pending |
 
 ---
 
