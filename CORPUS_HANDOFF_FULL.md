@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: ce2b5e5*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: b5630dd*
 
 ---
 
@@ -341,6 +341,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-03 | First backtests run via UI: momentum +39.00%, SPY +27.76%, momentum_v2 +13.55% (2022-01-03 → 2024-12-31) | UI-only |
 | 2026-06-03 | First automated forward run verified (ran=3 skipped=1 failed=0); per-bot metrics display bug logged | server-only |
 | 2026-06-04 | Fix Known Issue #12 — per-bot metrics now show backtest results when forward is day-one only; [BACKTEST]/[FORWARD] toggle added to metric cards; 10 new C24–C33 test assertions | ce2b5e5 |
+| 2026-06-04 | Fix Known Issue #12 (leaderboard instance) — OVERVIEW leaderboard now obeys chart mode toggle; statusBadge and populateLeaderboard accept mode param; default mode uses diverged-from-$100k check | b5630dd |
 
 ---
 
@@ -359,7 +360,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 9 | `source_url` XSS — `javascript:` scheme possible in job URLs | `[ RESOLVED — 6bf3e57 ]` | `jobs.html` only renders `<a href>` when scheme is http/https |
 | 10 | Credentials committed to public corpus-handoff repo | `[ RESOLVED — 2026-06-02 ]` | Keys rotated, history wiped, three-tier credential rule enforced |
 | 11 | `deploy.ps1` prints bare IP at end | `[ OPEN — cosmetic ]` | Change to print `https://corpusbc.duckdns.org` |
-| 12 | Per-bot metrics cards show forward day-one values ($100k) instead of backtest results once forward data exists | `[ RESOLVED — ce2b5e5 ]` | Endpoint now returns bt_metrics + fwd_metrics separately. default_mode=backtest until forward diverges from starting_cash. [BACKTEST]/[FORWARD] toggle on metric cards. Forward-only bots always default to forward. |
+| 12 | Per-bot metrics cards show forward day-one values ($100k) instead of backtest results once forward data exists | `[ RESOLVED — ce2b5e5, b5630dd ]` | Endpoint returns bt_metrics + fwd_metrics separately (ce2b5e5). [BACKTEST]/[FORWARD] toggle on metric cards. OVERVIEW leaderboard also fixed to obey chart mode toggle (b5630dd). Both fixes use diverged-from-$100k default logic. |
 
 ---
 
@@ -421,6 +422,7 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| b5630dd | Fix Known Issue #12 leaderboard — OVERVIEW rows now obey chart mode toggle | 2026-06-04 |
 | ce2b5e5 | Fix Known Issue #12 — dual-mode metrics, [BACKTEST]/[FORWARD] toggle, 10 new tests (53 total) | 2026-06-04 |
 | 3d23f9d | Project C Step 4 — app wiring, API routes, full UI live (43 tests) | 2026-06-03 |
 | a1cc9a7 | Project C Step 3 — strategies, engine, test suite (53 tests) | 2026-06-03 |
