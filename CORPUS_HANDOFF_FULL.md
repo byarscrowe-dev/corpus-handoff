@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 79ab52b*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 5e91889*
 
 ---
 
@@ -375,6 +375,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Baseline backtest button — BASELINE_BACKTEST_START/END constants in app.py; baseline:true API field; [ RUN BASELINE ] buttons in per-bot and engine tabs; 5 new test assertions (164 total) | c95f3a4 |
 | 2026-06-04 | Family-based UI — FAMILY_REGISTRY (3 families: momentum/#ff8800, chaos/#bb44ff, benchmark/#888888); family/subfamily in BOT_REGISTRY + config_json; champion-per-family OVERVIEW leaderboard + chart; family tabs with shaded member charts + SPY overlay; per-bot sections nested inside family panels; equity-data adds family/_families; 5 new test assertions (63 in step4, 164 total) | f146d0a |
 | 2026-06-04 | Click-to-expand bot details — family leaderboard rows clickable; one-at-a-time detail slot below family chart; lazy /api/project-c/bot fetch on first click; [ × ] close; active row family-color highlight; responsive width fixes (metrics grid minmax 160px, overflow-x on panels + table wrapper) | 79ab52b |
+| 2026-06-04 | Fix panel scroll — flex-shrink:0 on .pc-panel.active children forces overflow-y:auto to scroll instead of compressing content; remove auto-scrollIntoView on row click; stronger active-row highlight (0.13 opacity) | 5e91889 |
 
 ---
 
