@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: docs-only*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 6421560*
 
 ---
 
@@ -239,7 +239,7 @@ Results are **survivorship-biased** (current SP500_100 universe). UI carries thi
 
 Capitol Trades political disclosure bot → Claude-static bots → GDELT news bot → 13F follower → Claude Live API bot → AI-ETF mirror bot. `stock_ingest.py` stub is already in place for Phase 2.
 
-**Near-term pending bots (greenlit, no design session needed):** momentum_v3 (fast=20/slow=35 — tests the eager end; variant discipline: changes only slow_window). Random/chaos bot (scientific control — proves rules beat luck, not just SPY).
+**Bots as of 2026-06-04 (10 total, 9 active):** Momentum ladder v1(50)/v2(80)/v3(35)/v4(40)/v5(25); chaos_random (uniform/sell=10%), chaos_lazy (uniform/sell=0%), chaos_hot (recent_winners/sell=10%); spy_benchmark; twitter_x (shelved). No backtests run yet on new bots — use UI. Forward starts at next 6 PM CT run.
 
 **Variant discipline rule:** A variant changes EXACTLY ONE thing vs its parent. Non-varied params stay at genre house defaults. Multi-change variants are uninterpretable.
 
@@ -351,6 +351,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Fix Known Issue #12 — per-bot metrics now show backtest results when forward is day-one only; [BACKTEST]/[FORWARD] toggle added to metric cards; 10 new C24–C33 test assertions | ce2b5e5 |
 | 2026-06-04 | Fix Known Issue #12 (leaderboard instance) — OVERVIEW leaderboard now obeys chart mode toggle; statusBadge and populateLeaderboard accept mode param; default mode uses diverged-from-$100k check | b5630dd |
 | 2026-06-04 | Planning session — momentum_v3 greenlit; chaos bot greenlit; variant discipline rule; Mode 2 population search; bot genres; universe expansion; deploy.ps1 URL fix | docs-only |
+| 2026-06-04 | Six new bots live: momentum eagerness ladder v3(35)/v4(40)/v5(25) + chaos_random/lazy/hot; RandomStrategy with deterministic seeding + recent_winners mode; 54 new tests (159 total) | 6421560 |
 
 ---
 
@@ -395,14 +396,15 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Bot variant rule: serious changes get a new bot_id | Editing a live bot's config stitches two strategies into one uninterpretable equity curve. New bot_id preserves clean, honest history for both variants | 2026-06-03 |
 | Stock tests run against throwaway DATABASE_PATH temp DB | Tests must never touch live financial data in dashboard.db — even with idempotency guards in place | 2026-06-03 |
 | Per-bot endpoint returns both bt_metrics and fwd_metrics; default_mode fallback prefers forward only when diverged | Day-one forward snapshot at $100k was masking backtest results. Coexistence with explicit default_mode allows the UI toggle without losing either dataset; forward-only bots (Phases 4/6) always default to forward | 2026-06-04 |
+| stock_engine.py freeze interpretation: strategy class registration is the sanctioned exception | The freeze protects execution mechanics (T+1, no-lookahead, broker idempotency). Adding a new name to `_STRATEGY_MAP` is purely additive registration — no logic change. Future new strategy classes must be registered here; everything else in engine is frozen | 2026-06-04 |
 
 ---
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Build momentum_v3 (fast=20/slow=35) — easy, follows existing pattern; just add to BOT_REGISTRY and run backtest
-2. Build random/chaos bot — scientific control; forward_only; cheap
-3. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
+1. Run backtests on the 6 new bots from the UI (no code changes needed — just select each bot and run 2022-01-03 → 2024-12-31)
+2. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
+3. Future chaos family exploration: churn-rate ladder varying sell_probability only (never/10%/30%/etc.) — pure-randomness variable isolation, single-variable discipline
 
 ---
 
@@ -435,6 +437,7 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| 6421560 | Six new bots: momentum v3/v4/v5 + chaos_random/lazy/hot; RandomStrategy; 54 tests | 2026-06-04 |
 | b5630dd | Fix Known Issue #12 leaderboard — OVERVIEW rows now obey chart mode toggle | 2026-06-04 |
 | ce2b5e5 | Fix Known Issue #12 — dual-mode metrics, [BACKTEST]/[FORWARD] toggle, 10 new tests (53 total) | 2026-06-04 |
 | 3d23f9d | Project C Step 4 — app wiring, API routes, full UI live (43 tests) | 2026-06-03 |
