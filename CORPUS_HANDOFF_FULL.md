@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 5e91889*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: c7cad32*
 
 ---
 
@@ -376,6 +376,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Family-based UI — FAMILY_REGISTRY (3 families: momentum/#ff8800, chaos/#bb44ff, benchmark/#888888); family/subfamily in BOT_REGISTRY + config_json; champion-per-family OVERVIEW leaderboard + chart; family tabs with shaded member charts + SPY overlay; per-bot sections nested inside family panels; equity-data adds family/_families; 5 new test assertions (63 in step4, 164 total) | f146d0a |
 | 2026-06-04 | Click-to-expand bot details — family leaderboard rows clickable; one-at-a-time detail slot below family chart; lazy /api/project-c/bot fetch on first click; [ × ] close; active row family-color highlight; responsive width fixes (metrics grid minmax 160px, overflow-x on panels + table wrapper) | 79ab52b |
 | 2026-06-04 | Fix panel scroll — flex-shrink:0 on .pc-panel.active children forces overflow-y:auto to scroll instead of compressing content; remove auto-scrollIntoView on row click; stronger active-row highlight (0.13 opacity) | 5e91889 |
+| 2026-06-04 | Display integrity — no silent cross-mode substitution: seriesForMode removes forward→backtest fallback; statusBadge shows PENDING (not BACKTEST) in forward view; family leaderboard always renders rows; sparse-series point dots; honest bt_metrics positions_count from trade replay; mode-aware positions empty state; static mode label; 2 new test assertions (65 total) | c7cad32 |
 
 ---
 
@@ -421,6 +422,8 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Stock tests run against throwaway DATABASE_PATH temp DB | Tests must never touch live financial data in dashboard.db — even with idempotency guards in place | 2026-06-03 |
 | Per-bot endpoint returns both bt_metrics and fwd_metrics; default_mode fallback prefers forward only when diverged | Day-one forward snapshot at $100k was masking backtest results. Coexistence with explicit default_mode allows the UI toggle without losing either dataset; forward-only bots (Phases 4/6) always default to forward | 2026-06-04 |
 | stock_engine.py freeze interpretation: strategy class registration is the sanctioned exception | The freeze protects execution mechanics (T+1, no-lookahead, broker idempotency). Adding a new name to `_STRATEGY_MAP` is purely additive registration — no logic change. Future new strategy classes must be registered here; everything else in engine is frozen | 2026-06-04 |
+| Scope default: reported issues apply to all bots/families unless explicitly narrowed | CORPUS is one system — partial fixes create inconsistent views that erode trust in the data. Standardization across all families is the default posture; deviations require a design discussion | 2026-06-04 |
+| No silent cross-mode substitution: explicit mode shows only that mode's data | Silently swapping backtest data into a forward view or vice versa made the chart x-axis lie (2022 dates appearing in a "forward" view), hid missing data behind misleading BACKTEST badges, and created a false sense that forward data existed. Honest empty/PENDING states are less visually impressive but always accurate. The defaultModeForBots fallback chain is separate — it determines which mode is selected by default, not what renders | 2026-06-04 |
 
 ---
 
@@ -443,6 +446,9 @@ Monitor YouTube channels for new uploads, identify highlight moments, clip and p
 **Project K — Property Locator System**
 Multi-bot system for undervalued DFW properties. First bot: underpriced duplexes evaluated on price-to-rent ratio and cap rate. Future bots: small multifamily, commercial land, distressed, off-market.
 
+**Project C — Full backtest holdings list**
+Reconstruct end-of-backtest holdings (ticker / shares / avg-cost) by replaying `c_trades WHERE mode='backtest'` for each bot. `bt_metrics.positions_count` already does net-share replay to COUNT open positions; the holdings TABLE needs the same replay plus current-price enrichment from YFinancePriceSource. The positions panel currently shows `[ POSITION DETAIL IS RECORDED FOR FORWARD ONLY ]` in backtest view. No design block — scope only.
+
 **Project C — Bot genres for future ideation (design session before building each)**
 Calendar/seasonality effects; volatility-regime switching (different behavior in calm vs panicked markets); mean-reversion / anti-momentum (buy what crashed); insider-buying via SEC Form 4 (~2-day filing lag, less than Capitol Trades); sector-rotation; dividend-aristocrat tilt. Universe expansion to full S&P 500 (~5x nightly fetch, acceptable; does NOT fix backtest survivorship bias unless historical membership data added). Genre leaderboards UI once multiple genres exist.
 
@@ -461,6 +467,7 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| c7cad32 | Display integrity — no cross-mode substitution, honest positions_count, sparse-series dots, PENDING states | 2026-06-04 |
 | 79ab52b | Click-to-expand bot details on family pages — lazy detail slot, responsive width fixes | 2026-06-04 |
 | f146d0a | Family-based UI — FAMILY_REGISTRY, champion overview, family tabs with shaded charts; 5 new test assertions | 2026-06-04 |
 | c95f3a4 | Baseline backtest button — BASELINE_BACKTEST_START/END constants, baseline:true API, 5 new tests | 2026-06-04 |
