@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-03 | Commit: 3d23f9d*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: ce2b5e5*
 
 ---
 
@@ -340,6 +340,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-03 | VPS resized 512MB → 2GB RAM + 2GB swap; sqlite3 installed; .env cleaned; DB backups at /root/corpus_backups/ | server-only |
 | 2026-06-03 | First backtests run via UI: momentum +39.00%, SPY +27.76%, momentum_v2 +13.55% (2022-01-03 → 2024-12-31) | UI-only |
 | 2026-06-03 | First automated forward run verified (ran=3 skipped=1 failed=0); per-bot metrics display bug logged | server-only |
+| 2026-06-04 | Fix Known Issue #12 — per-bot metrics now show backtest results when forward is day-one only; [BACKTEST]/[FORWARD] toggle added to metric cards; 10 new C24–C33 test assertions | ce2b5e5 |
 
 ---
 
@@ -358,7 +359,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 9 | `source_url` XSS — `javascript:` scheme possible in job URLs | `[ RESOLVED — 6bf3e57 ]` | `jobs.html` only renders `<a href>` when scheme is http/https |
 | 10 | Credentials committed to public corpus-handoff repo | `[ RESOLVED — 2026-06-02 ]` | Keys rotated, history wiped, three-tier credential rule enforced |
 | 11 | `deploy.ps1` prints bare IP at end | `[ OPEN — cosmetic ]` | Change to print `https://corpusbc.duckdns.org` |
-| 12 | Per-bot metrics cards show forward day-one values ($100k) instead of backtest results once forward data exists | `[ OPEN ]` | OVERVIEW chart unaffected; c_equity_snapshots data intact. Suspected: `/api/project-c/bot` endpoint prefers forward mode — day-one forward snapshots at $100k now mask backtest metrics. Needs investigation + presentation fix (show both modes or a toggle). |
+| 12 | Per-bot metrics cards show forward day-one values ($100k) instead of backtest results once forward data exists | `[ RESOLVED — ce2b5e5 ]` | Endpoint now returns bt_metrics + fwd_metrics separately. default_mode=backtest until forward diverges from starting_cash. [BACKTEST]/[FORWARD] toggle on metric cards. Forward-only bots always default to forward. |
 
 ---
 
@@ -383,14 +384,14 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Backtest idempotency: wipe + re-insert; forward rows append-only | Backtests need to be rerun safely; forward history is ground truth that must never be deleted | 2026-06-03 |
 | Bot variant rule: serious changes get a new bot_id | Editing a live bot's config stitches two strategies into one uninterpretable equity curve. New bot_id preserves clean, honest history for both variants | 2026-06-03 |
 | Stock tests run against throwaway DATABASE_PATH temp DB | Tests must never touch live financial data in dashboard.db — even with idempotency guards in place | 2026-06-03 |
+| Per-bot endpoint returns both bt_metrics and fwd_metrics; default_mode fallback prefers forward only when diverged | Day-one forward snapshot at $100k was masking backtest results. Coexistence with explicit default_mode allows the UI toggle without losing either dataset; forward-only bots (Phases 4/6) always default to forward | 2026-06-04 |
 
 ---
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Fix per-bot metrics display bug (issue #12) — investigate `/api/project-c/bot/<bot_id>` mode-preference logic; fix metrics cards to show backtest results when forward data is day-one only, or add a mode toggle to the per-bot tab
-2. Update `deploy.ps1` to print `https://corpusbc.duckdns.org` at the end instead of bare IP (cosmetic)
-3. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
+1. Update `deploy.ps1` to print `https://corpusbc.duckdns.org` at the end instead of bare IP (cosmetic)
+2. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
 
 ---
 
@@ -420,6 +421,7 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| ce2b5e5 | Fix Known Issue #12 — dual-mode metrics, [BACKTEST]/[FORWARD] toggle, 10 new tests (53 total) | 2026-06-04 |
 | 3d23f9d | Project C Step 4 — app wiring, API routes, full UI live (43 tests) | 2026-06-03 |
 | a1cc9a7 | Project C Step 3 — strategies, engine, test suite (53 tests) | 2026-06-03 |
 | 1230462 | Project C Step 2 — BacktestBroker + SimulatedBroker | 2026-06-03 |
