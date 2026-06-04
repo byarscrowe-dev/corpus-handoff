@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 2ba4bbe*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 99aacc6*
 
 ---
 
@@ -49,7 +49,7 @@ A private personal dashboard — Flask/SQLite web app hosting multiple internal 
 **Local path:** `C:\Users\Byars\Clau Playgroun\First proj empty foler\`
 **Server path:** `/opt/corpus/`
 **Stack:** Flask + SQLite → gunicorn → nginx → Ubuntu 24.04, DigitalOcean NYC1
-**Branch:** master | **Current commit:** 2ba4bbe
+**Branch:** master | **Current commit:** 99aacc6
 
 ---
 
@@ -387,6 +387,8 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Display integrity — no silent cross-mode substitution: seriesForMode removes forward→backtest fallback; statusBadge shows PENDING (not BACKTEST) in forward view; family leaderboard always renders rows; sparse-series point dots; honest bt_metrics positions_count from trade replay; mode-aware positions empty state; static mode label; 2 new test assertions (65 total) | c7cad32 |
 | 2026-06-04 | Merged SNAPSHOT health column — date badge replaces separate LAST SNAPSHOT + STATUS columns; green/red/grey freshness coloring in forward mode; neutral grey date in backtest mode; fix stale vs.SPY cell persisting on mode switch | 2ba4bbe |
 | 2026-06-04 | Mega memory backup — full baseline results (all 9 bots), key findings, workflow migration, fixture-collision rule, Phase 2 design questions, position-sizing ladder parking lot, UI architecture accuracy pass | docs-only |
+| 2026-06-04 | gitignore playlist CSV exports — stop recurring git-status clutter | f04ac47 |
+| 2026-06-04 | CLAUDE.md auto-boot pointer — routes every session to memory + handoff, inlines hard rules | 99aacc6 |
 
 ---
 
@@ -481,22 +483,16 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 ---
 
-## WORKFLOW MIGRATION — DISPATCH-AGENT ARCHITECTURE
+## WORKFLOW — DISPATCH & EXECUTION (migration complete 2026-06-04)
 
-**Status as of 2026-06-04:** Transition in progress. Claude Desktop installing; plumbing not yet built.
+**Status: COMPLETE as of 2026-06-04.** The dispatch-agent transition is done; the structure below is live, not planned.
 
-**Architecture:**
-- Planning conversation moves to **Claude Desktop** (replaces this claude.ai web thread as the planning seat)
-- Claude Code registered as MCP server: `claude mcp serve`
-- Planner dispatches tasks to CC, reviews diffs, handles CC permission prompts within encoded standing rules
-- Human checkpoints remain unchanged: deploys, live DB writes, frozen files, design forks
-
-**Planned additions:**
-- Playwright MCP for visual verification of deployed site after each deploy
-- Permission config for CC derived from standing rules in this doc + CC memory files
-
-**This conversation as predecessor:**
-This claude.ai thread is the predecessor planning seat. Its full context (architecture decisions, standing rules, backtest results, roadmap, workflow patterns, fixture collision incidents, UI architecture) is captured in CC `memory/project_c.md` and this handoff doc as of the 2026-06-04 mega backup. The fresh Desktop session boots from these two files via the persistent-context fetch URL above.
+- **Execution is native in the Claude Code tab.** Flow: plan-gate → human approves the plan → Accept-edits execution for file edits, with terminal and git commands still individually gated (explicit approval each time).
+- **CLAUDE.md auto-boot is live** (commit `99aacc6`). Every session loads `CLAUDE.md` at the repo root, which routes to the two mandatory-read files (`memory/project_c.md`, `docs/CORPUS_HANDOFF_FULL.md`) and inlines the hard rules.
+- **Visual verification uses Claude Code's built-in preview** — this replaced the earlier Playwright-MCP plan.
+- **MCP-dispatch architecture is abandoned** as the active plan (a separate orchestrator brain registering CC as an MCP server via `claude mcp serve`). It remains a KNOWN FALLBACK if a dedicated orchestrator is ever wanted.
+- **The claude.ai web thread is retired** as the predecessor planning seat. Ideation/strategy now lives in the Chat tab with full cross-project context; builds run in task-scoped Code sessions; written dispatch prompts are the handoff.
+- **Workflow vision, the ideation/execution bifurcation, and the Auto-mode trust plan live in `memory/workflow_structure.md`** (private memory) — evaluate future workflow decisions against it.
 
 ---
 
