@@ -49,7 +49,7 @@ A private personal dashboard — Flask/SQLite web app hosting multiple internal 
 **Local path:** `C:\Users\Byars\Clau Playgroun\First proj empty foler\`
 **Server path:** `/opt/corpus/`
 **Stack:** Flask + SQLite → gunicorn → nginx → Ubuntu 24.04, DigitalOcean NYC1
-**Branch:** master | **Current commit:** 3d23f9d
+**Branch:** master | **Current commit:** 2ba4bbe
 
 ---
 
@@ -206,15 +206,21 @@ Multi-bot stock trading simulation. Each bot starts with $100k fake cash and run
 | chaos_hot | chaos | RandomStrategy recent_winners/sell=10% | Tests if momentum edge = just "buy winners" |
 | twitter_x | (none) | — | Shelved — X API restrictions |
 
-### First backtest results (2022-01-03 → 2024-12-31)
+### Baseline backtest results (2022-01-03 → 2024-12-31) — all 9 bots, run 2026-06-04
 
-| Bot | Return | Max Drawdown |
+| Bot | Return | Notes |
 |---|---|---|
-| momentum | +39.00% | -22.05% |
-| spy_benchmark | +27.76% | — |
-| momentum_v2 | +13.55% | — |
+| momentum (slow=50) | +39.00% | |
+| chaos_random | +38.52% | 0.48 pts behind v1 — coin-flip nearly beat structure |
+| momentum_v4 (slow=40) | +34.74% | |
+| chaos_hot | +31.96% | |
+| spy_benchmark | +27.76% | benchmark |
+| momentum_v5 (slow=25) | +25.18% | |
+| momentum_v3 (slow=35) | +18.12% | below both neighbors — ladder is jagged |
+| momentum_v2 (slow=80) | +13.55% | |
+| chaos_lazy | +8.60% | sell=0%, lowest turnover |
 
-Results are **survivorship-biased** (current SP500_100 universe). UI carries this note.
+Results are **survivorship-biased** (current SP500_100 universe). Key finding: coin-flip random beat 4 of 5 momentum variants — in this window, universe+stop did the work, crossover added ~nothing vs dice. Caveat: each chaos bot = one draw; forward and Mode 2 populations are the rigorous tests.
 
 ### Architecture highlights
 
@@ -255,7 +261,9 @@ Tab strip: `[ OVERVIEW ] [ MOMENTUM BOTS ] [ CHAOS BOTS ] [ SPY BUY & HOLD ] [ E
 
 Capitol Trades political disclosure bot → Claude-static bots → GDELT news bot → 13F follower → Claude Live API bot → AI-ETF mirror bot. `stock_ingest.py` stub is already in place for Phase 2.
 
-**Bots as of 2026-06-04 (10 total, 9 active):** Momentum ladder v1(50)/v2(80)/v3(35)/v4(40)/v5(25); chaos_random (uniform/sell=10%), chaos_lazy (uniform/sell=0%), chaos_hot (recent_winners/sell=10%); spy_benchmark; twitter_x (shelved). No backtests run yet on new bots — use UI. Forward starts at next 6 PM CT run.
+**Bots as of 2026-06-04 (10 total, 9 active):** Momentum ladder v1(50)/v2(80)/v3(35)/v4(40)/v5(25); chaos_random (uniform/sell=10%), chaos_lazy (uniform/sell=0%), chaos_hot (recent_winners/sell=10%); spy_benchmark; twitter_x (shelved). Baseline backtests complete for all 9 — see results table above. Forward: momentum/momentum_v2/spy_benchmark have 1 row from 2026-06-03; full 9-bot runs begin tonight (6 PM CT). Verify: journalctl ran=9 skipped=1 failed=0; 9 rows dated 2026-06-04; SPY value diverges from $100k (KI#12 fix production test).
+
+**Phase 2 — Capitol Trades design questions:** data source (capitoltrades.com scrape vs Quiver Quant API vs raw House/Senate disclosures), signal rules (buy on first disclosure? accumulate? threshold?), universe (trades may be outside SP500), disclosure lag ~45 days (edge likely decayed — bot tests whether signal survives).
 
 **Baseline backtest button:** `BASELINE_BACKTEST_START = '2022-01-03'`, `BASELINE_BACKTEST_END = '2024-12-31'` defined once in app.py — single source of truth. `POST /api/project-c/backtest/run` accepts `{"bot_id": ..., "baseline": true}` to use these constants server-side; start/end in payload ignored. [ RUN BASELINE 2022–2024 ] button appears next to [ RUN BACKTEST ] in both the per-bot tab and engine tab. All new bots should be baseline-tested so comparisons share one window.
 
@@ -378,6 +386,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Fix panel scroll — flex-shrink:0 on .pc-panel.active children forces overflow-y:auto to scroll instead of compressing content; remove auto-scrollIntoView on row click; stronger active-row highlight (0.13 opacity) | 5e91889 |
 | 2026-06-04 | Display integrity — no silent cross-mode substitution: seriesForMode removes forward→backtest fallback; statusBadge shows PENDING (not BACKTEST) in forward view; family leaderboard always renders rows; sparse-series point dots; honest bt_metrics positions_count from trade replay; mode-aware positions empty state; static mode label; 2 new test assertions (65 total) | c7cad32 |
 | 2026-06-04 | Merged SNAPSHOT health column — date badge replaces separate LAST SNAPSHOT + STATUS columns; green/red/grey freshness coloring in forward mode; neutral grey date in backtest mode; fix stale vs.SPY cell persisting on mode switch | 2ba4bbe |
+| 2026-06-04 | Mega memory backup — full baseline results (all 9 bots), key findings, workflow migration, fixture-collision rule, Phase 2 design questions, position-sizing ladder parking lot, UI architecture accuracy pass | docs-only |
 
 ---
 
@@ -425,14 +434,16 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | stock_engine.py freeze interpretation: strategy class registration is the sanctioned exception | The freeze protects execution mechanics (T+1, no-lookahead, broker idempotency). Adding a new name to `_STRATEGY_MAP` is purely additive registration — no logic change. Future new strategy classes must be registered here; everything else in engine is frozen | 2026-06-04 |
 | Scope default: reported issues apply to all bots/families unless explicitly narrowed | CORPUS is one system — partial fixes create inconsistent views that erode trust in the data. Standardization across all families is the default posture; deviations require a design discussion | 2026-06-04 |
 | No silent cross-mode substitution: explicit mode shows only that mode's data | Silently swapping backtest data into a forward view or vice versa made the chart x-axis lie (2022 dates appearing in a "forward" view), hid missing data behind misleading BACKTEST badges, and created a false sense that forward data existed. Honest empty/PENDING states are less visually impressive but always accurate. The defaultModeForBots fallback chain is separate — it determines which mode is selected by default, not what renders | 2026-06-04 |
+| Test fixture collision: always wipe relevant snapshot rows before seeding | Two incidents — C29: a pre-existing backtest snapshot at today's date masked the seeded 2024-12-31 test row (bt_snap ORDER BY DESC LIMIT 1 returned wrong row). C27/C28: Section B's run_forward_step wrote a forward snapshot for momentum with cash=75k from Section A's idempotency test; that row persisted into C24's mode comparison. Fix in both cases: DELETE FROM c_equity_snapshots WHERE bot_id=? (full bot, not just the specific date/mode) before seeding. Rule: scope the delete broadly | 2026-06-04 |
 
 ---
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Run backtests on the 6 new bots from the UI using [ RUN BASELINE 2022–2024 ] (no code changes needed — navigate to each family tab, open the per-bot section, click the baseline button)
-2. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
-3. Future chaos family exploration: churn-rate ladder varying sell_probability only (never/10%/30%/etc.) — pure-randomness variable isolation, single-variable discipline
+1. Verify tonight's forward run (6 PM CT) — journalctl `ran=9 skipped=1 failed=0`; 9 forward rows dated 2026-06-04; SPY value diverges from $100k (first production test of KI#12 default_mode logic)
+2. Plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub ready; see design questions above)
+3. Multi-horizon robustness panel design session — once meaningful forward data accumulates (weeks/months)
+4. Future chaos exploration: churn-rate ladder (sell_prob never/10%/30%) — pure-randomness variable isolation
 
 ---
 
@@ -446,6 +457,12 @@ Monitor YouTube channels for new uploads, identify highlight moments, clip and p
 
 **Project K — Property Locator System**
 Multi-bot system for undervalued DFW properties. First bot: underpriced duplexes evaluated on price-to-rent ratio and cap rate. Future bots: small multifamily, commercial land, distressed, off-market.
+
+**Project C — Position-sizing variant ladder**
+Vary position_size_pct (5%/10%/20%) keeping all else constant — isolates sizing from signal quality. All current bots use 10%. Single-variable discipline: one bot per sizing level, compared within same strategy family. No design block — low effort.
+
+**Project C — Genre leaderboard display question**
+When multiple genres exist, should the main leaderboard show each genre's average return or its best performer? Settle at build time.
 
 **Project C — Full backtest holdings list**
 Reconstruct end-of-backtest holdings (ticker / shares / avg-cost) by replaying `c_trades WHERE mode='backtest'` for each bot. `bt_metrics.positions_count` already does net-share replay to COUNT open positions; the holdings TABLE needs the same replay plus current-price enrichment from YFinancePriceSource. The positions panel currently shows `[ POSITION DETAIL IS RECORDED FOR FORWARD ONLY ]` in backtest view. No design block — scope only.
@@ -464,10 +481,30 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 ---
 
+## WORKFLOW MIGRATION — DISPATCH-AGENT ARCHITECTURE
+
+**Status as of 2026-06-04:** Transition in progress. Claude Desktop installing; plumbing not yet built.
+
+**Architecture:**
+- Planning conversation moves to **Claude Desktop** (replaces this claude.ai web thread as the planning seat)
+- Claude Code registered as MCP server: `claude mcp serve`
+- Planner dispatches tasks to CC, reviews diffs, handles CC permission prompts within encoded standing rules
+- Human checkpoints remain unchanged: deploys, live DB writes, frozen files, design forks
+
+**Planned additions:**
+- Playwright MCP for visual verification of deployed site after each deploy
+- Permission config for CC derived from standing rules in this doc + CC memory files
+
+**This conversation as predecessor:**
+This claude.ai thread is the predecessor planning seat. Its full context (architecture decisions, standing rules, backtest results, roadmap, workflow patterns, fixture collision incidents, UI architecture) is captured in CC `memory/project_c.md` and this handoff doc as of the 2026-06-04 mega backup. The fresh Desktop session boots from these two files via the persistent-context fetch URL above.
+
+---
+
 ## GIT RESTORE POINTS
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| a2851e1 | Mega memory backup — full baseline results, workflow migration, fixture-collision rule | 2026-06-04 |
 | 2ba4bbe | Merged SNAPSHOT health column — date badge with freshness coloring; fix stale vs.SPY on mode switch | 2026-06-04 |
 | c7cad32 | Display integrity — no cross-mode substitution, honest positions_count, sparse-series dots, PENDING states | 2026-06-04 |
 | 79ab52b | Click-to-expand bot details on family pages — lazy detail slot, responsive width fixes | 2026-06-04 |
