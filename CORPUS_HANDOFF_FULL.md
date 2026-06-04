@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 6421560*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: f146d0a*
 
 ---
 
@@ -191,14 +191,20 @@ SPOTIFY_REDIRECT_URI=https://corpusbc.duckdns.org/callback
 
 Multi-bot stock trading simulation. Each bot starts with $100k fake cash and runs a different strategy. Equity curves accumulate over time on a comparison chart with a leaderboard vs. SPY. Phase 1 is pure simulation — no real money, no live broker.
 
-### Bots
+### Bots (10 total, 9 active)
 
-| bot_id | Strategy | Key config | Notes |
+| bot_id | Family | Strategy | Notes |
 |---|---|---|---|
-| spy_benchmark | Buy & Hold SPY | SPY only, all-in, no stop-loss | Benchmark reference line |
-| momentum | MA Crossover | SP500_100, fast=20/slow=50 SMA, 10% size, stop-loss 7% | |
-| momentum_v2 | MA Crossover | SP500_100, fast=20/slow=80 SMA, 10% size, stop-loss 7% | Wider window to cut whipsaw |
-| twitter_x | — | — | Shelved — X API restrictions |
+| spy_benchmark | benchmark | Buy & Hold SPY | Benchmark reference line — `#888888` grey |
+| momentum | momentum | MA Crossover fast=20/slow=50 | Flagship — `#ff8800` orange |
+| momentum_v2 | momentum | MA Crossover fast=20/slow=80 | Wider window, fewer trades |
+| momentum_v3 | momentum | MA Crossover fast=20/slow=35 | Eager end of slow-window spectrum |
+| momentum_v4 | momentum | MA Crossover fast=20/slow=40 | Fills gap between v3 and v1 |
+| momentum_v5 | momentum | MA Crossover fast=20/slow=25 | Whipsaw-territory probe |
+| chaos_random | chaos | RandomStrategy uniform/sell=10% | Scientific control — `#bb44ff` violet |
+| chaos_lazy | chaos | RandomStrategy uniform/sell=0% | Isolates turnover vs chaos_random |
+| chaos_hot | chaos | RandomStrategy recent_winners/sell=10% | Tests if momentum edge = just "buy winners" |
+| twitter_x | (none) | — | Shelved — X API restrictions |
 
 ### First backtest results (2022-01-03 → 2024-12-31)
 
@@ -225,14 +231,24 @@ Results are **survivorship-biased** (current SP500_100 universe). UI carries thi
 
 `run_all_forward_bots` fires at **6:00 PM CT weekdays** (3h after market close — yfinance data has propagated). First run 2026-06-03. Forward rows are append-only.
 
+### UI structure (2026-06-04)
+
+Tab strip: `[ OVERVIEW ] [ MOMENTUM BOTS ] [ CHAOS BOTS ] [ SPY BUY & HOLD ] [ ENGINE ]`
+
+**OVERVIEW:** Family-champion leaderboard (one row per family; champion = highest return in current mode; benchmark exempt from competition). Chart draws 3 curves — one champion curve per family in family base color; benchmark dashed grey. Mode toggle (backtest/forward) drives both leaderboard and chart. Default mode uses diverged-from-$100k rule.
+
+**Family tabs:** Family header (colored left-border + description) → family leaderboard (all members, vs. SPY) → family chart (all members in family-color shades + SPY dashed grey overlay, own mode toggle) → per-bot detail sections (metrics, mode toggle, positions, trades, backtest/baseline buttons) always visible nested inside the panel.
+
+**FAMILY_REGISTRY** defined in `stock_agent.py`: 3 families — momentum `#ff8800`, chaos `#bb44ff`, benchmark `#888888`. Every new bot must declare `family` in BOT_REGISTRY. `subfamily` optional (null OK now). `initialize_bots` writes `_family`/`_subfamily` to config_json; propagates to all existing rows on each restart.
+
 ### Project C routes
 
 | Route | Method | Purpose |
 |---|---|---|
-| `/project-c` | GET | Main page — leaderboard, equity curves, per-bot tabs, ENGINE tab |
-| `/api/project-c/equity-data` | GET | All snapshots grouped by bot_id + mode (Chart.js data) |
-| `/api/project-c/bot/<bot_id>` | GET | Per-bot metrics, live positions with current price, last 50 trades |
-| `/api/project-c/backtest/run` | POST | `{bot_id, start_date, end_date}` — fire backtest |
+| `/project-c` | GET | Main page — family tabs, champion overview, ENGINE tab |
+| `/api/project-c/equity-data` | GET | Snapshots by bot_id + mode + `family`/`subfamily`; `_families` top-level key |
+| `/api/project-c/bot/<bot_id>` | GET | Per-bot metrics (bt_metrics/fwd_metrics/default_mode), positions, last 50 trades |
+| `/api/project-c/backtest/run` | POST | `{bot_id, start_date, end_date}` or `{bot_id, baseline:true}` — fire backtest |
 | `/api/project-c/backtest/status` | GET | `{running, bot_id, pct}` — poll progress |
 
 ### Phase 2+ roadmap (each needs a design session)
@@ -356,7 +372,8 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Fix Known Issue #12 (leaderboard instance) — OVERVIEW leaderboard now obeys chart mode toggle; statusBadge and populateLeaderboard accept mode param; default mode uses diverged-from-$100k check | b5630dd |
 | 2026-06-04 | Planning session — momentum_v3 greenlit; chaos bot greenlit; variant discipline rule; Mode 2 population search; bot genres; universe expansion; deploy.ps1 URL fix | docs-only |
 | 2026-06-04 | Six new bots live: momentum eagerness ladder v3(35)/v4(40)/v5(25) + chaos_random/lazy/hot; RandomStrategy with deterministic seeding + recent_winners mode; 54 new tests (159 total) | 6421560 |
-| 2026-06-04 | Baseline backtest button — BASELINE_BACKTEST_START/END constants in app.py; baseline:true API field; [ RUN BASELINE ] buttons in per-bot and engine tabs; 5 new test assertions (164 total) | pending |
+| 2026-06-04 | Baseline backtest button — BASELINE_BACKTEST_START/END constants in app.py; baseline:true API field; [ RUN BASELINE ] buttons in per-bot and engine tabs; 5 new test assertions (164 total) | c95f3a4 |
+| 2026-06-04 | Family-based UI — FAMILY_REGISTRY (3 families: momentum/#ff8800, chaos/#bb44ff, benchmark/#888888); family/subfamily in BOT_REGISTRY + config_json; champion-per-family OVERVIEW leaderboard + chart; family tabs with shaded member charts + SPY overlay; per-bot sections nested inside family panels; equity-data adds family/_families; 5 new test assertions (63 in step4, 164 total) | f146d0a |
 
 ---
 
@@ -407,7 +424,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Run backtests on the 6 new bots from the UI (no code changes needed — just select each bot and run 2022-01-03 → 2024-12-31)
+1. Run backtests on the 6 new bots from the UI using [ RUN BASELINE 2022–2024 ] (no code changes needed — navigate to each family tab, open the per-bot section, click the baseline button)
 2. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
 3. Future chaos family exploration: churn-rate ladder varying sell_probability only (never/10%/30%/etc.) — pure-randomness variable isolation, single-variable discipline
 
@@ -442,6 +459,8 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| f146d0a | Family-based UI — FAMILY_REGISTRY, champion overview, family tabs with shaded charts; 5 new test assertions | 2026-06-04 |
+| c95f3a4 | Baseline backtest button — BASELINE_BACKTEST_START/END constants, baseline:true API, 5 new tests | 2026-06-04 |
 | 6421560 | Six new bots: momentum v3/v4/v5 + chaos_random/lazy/hot; RandomStrategy; 54 tests | 2026-06-04 |
 | b5630dd | Fix Known Issue #12 leaderboard — OVERVIEW rows now obey chart mode toggle | 2026-06-04 |
 | ce2b5e5 | Fix Known Issue #12 — dual-mode metrics, [BACKTEST]/[FORWARD] toggle, 10 new tests (53 total) | 2026-06-04 |
