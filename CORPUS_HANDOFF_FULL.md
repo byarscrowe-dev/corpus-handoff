@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: f146d0a*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 79ab52b*
 
 ---
 
@@ -374,6 +374,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Six new bots live: momentum eagerness ladder v3(35)/v4(40)/v5(25) + chaos_random/lazy/hot; RandomStrategy with deterministic seeding + recent_winners mode; 54 new tests (159 total) | 6421560 |
 | 2026-06-04 | Baseline backtest button — BASELINE_BACKTEST_START/END constants in app.py; baseline:true API field; [ RUN BASELINE ] buttons in per-bot and engine tabs; 5 new test assertions (164 total) | c95f3a4 |
 | 2026-06-04 | Family-based UI — FAMILY_REGISTRY (3 families: momentum/#ff8800, chaos/#bb44ff, benchmark/#888888); family/subfamily in BOT_REGISTRY + config_json; champion-per-family OVERVIEW leaderboard + chart; family tabs with shaded member charts + SPY overlay; per-bot sections nested inside family panels; equity-data adds family/_families; 5 new test assertions (63 in step4, 164 total) | f146d0a |
+| 2026-06-04 | Click-to-expand bot details — family leaderboard rows clickable; one-at-a-time detail slot below family chart; lazy /api/project-c/bot fetch on first click; [ × ] close; active row family-color highlight; responsive width fixes (metrics grid minmax 160px, overflow-x on panels + table wrapper) | 79ab52b |
 
 ---
 
@@ -459,6 +460,7 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| 79ab52b | Click-to-expand bot details on family pages — lazy detail slot, responsive width fixes | 2026-06-04 |
 | f146d0a | Family-based UI — FAMILY_REGISTRY, champion overview, family tabs with shaded charts; 5 new test assertions | 2026-06-04 |
 | c95f3a4 | Baseline backtest button — BASELINE_BACKTEST_START/END constants, baseline:true API, 5 new tests | 2026-06-04 |
 | 6421560 | Six new bots: momentum v3/v4/v5 + chaos_random/lazy/hot; RandomStrategy; 54 tests | 2026-06-04 |
