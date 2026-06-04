@@ -1,5 +1,5 @@
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: c7cad32*
+*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 2ba4bbe*
 
 ---
 
@@ -377,6 +377,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Click-to-expand bot details — family leaderboard rows clickable; one-at-a-time detail slot below family chart; lazy /api/project-c/bot fetch on first click; [ × ] close; active row family-color highlight; responsive width fixes (metrics grid minmax 160px, overflow-x on panels + table wrapper) | 79ab52b |
 | 2026-06-04 | Fix panel scroll — flex-shrink:0 on .pc-panel.active children forces overflow-y:auto to scroll instead of compressing content; remove auto-scrollIntoView on row click; stronger active-row highlight (0.13 opacity) | 5e91889 |
 | 2026-06-04 | Display integrity — no silent cross-mode substitution: seriesForMode removes forward→backtest fallback; statusBadge shows PENDING (not BACKTEST) in forward view; family leaderboard always renders rows; sparse-series point dots; honest bt_metrics positions_count from trade replay; mode-aware positions empty state; static mode label; 2 new test assertions (65 total) | c7cad32 |
+| 2026-06-04 | Merged SNAPSHOT health column — date badge replaces separate LAST SNAPSHOT + STATUS columns; green/red/grey freshness coloring in forward mode; neutral grey date in backtest mode; fix stale vs.SPY cell persisting on mode switch | 2ba4bbe |
 
 ---
 
@@ -467,6 +468,7 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 | Commit | Description | Date |
 |--------|-------------|------|
+| 2ba4bbe | Merged SNAPSHOT health column — date badge with freshness coloring; fix stale vs.SPY on mode switch | 2026-06-04 |
 | c7cad32 | Display integrity — no cross-mode substitution, honest positions_count, sparse-series dots, PENDING states | 2026-06-04 |
 | 79ab52b | Click-to-expand bot details on family pages — lazy detail slot, responsive width fixes | 2026-06-04 |
 | f146d0a | Family-based UI — FAMILY_REGISTRY, champion overview, family tabs with shaded charts; 5 new test assertions | 2026-06-04 |
