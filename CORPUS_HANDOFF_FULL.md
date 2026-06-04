@@ -339,6 +339,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-03 | Project C Phase 1 Steps 3–4 — engine, strategies, app wiring, API routes, full UI live (96 tests total) | 3d23f9d |
 | 2026-06-03 | VPS resized 512MB → 2GB RAM + 2GB swap; sqlite3 installed; .env cleaned; DB backups at /root/corpus_backups/ | server-only |
 | 2026-06-03 | First backtests run via UI: momentum +39.00%, SPY +27.76%, momentum_v2 +13.55% (2022-01-03 → 2024-12-31) | UI-only |
+| 2026-06-03 | First automated forward run verified (ran=3 skipped=1 failed=0); per-bot metrics display bug logged | server-only |
 
 ---
 
@@ -357,6 +358,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 9 | `source_url` XSS — `javascript:` scheme possible in job URLs | `[ RESOLVED — 6bf3e57 ]` | `jobs.html` only renders `<a href>` when scheme is http/https |
 | 10 | Credentials committed to public corpus-handoff repo | `[ RESOLVED — 2026-06-02 ]` | Keys rotated, history wiped, three-tier credential rule enforced |
 | 11 | `deploy.ps1` prints bare IP at end | `[ OPEN — cosmetic ]` | Change to print `https://corpusbc.duckdns.org` |
+| 12 | Per-bot metrics cards show forward day-one values ($100k) instead of backtest results once forward data exists | `[ OPEN ]` | OVERVIEW chart unaffected; c_equity_snapshots data intact. Suspected: `/api/project-c/bot` endpoint prefers forward mode — day-one forward snapshots at $100k now mask backtest metrics. Needs investigation + presentation fix (show both modes or a toggle). |
 
 ---
 
@@ -386,7 +388,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Verify first automated forward run executed (2026-06-03, 6 PM CT) — check `journalctl -u corpus` and `sqlite3 /opt/corpus/dashboard.db "SELECT bot_id, snapshot_date, total_value FROM c_equity_snapshots WHERE mode='forward';"`
+1. Fix per-bot metrics display bug (issue #12) — investigate `/api/project-c/bot/<bot_id>` mode-preference logic; fix metrics cards to show backtest results when forward data is day-one only, or add a mode toggle to the per-bot tab
 2. Update `deploy.ps1` to print `https://corpusbc.duckdns.org` at the end instead of bare IP (cosmetic)
 3. When ready: plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub is already in place)
 
