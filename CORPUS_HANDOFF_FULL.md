@@ -1,4 +1,4 @@
-LAST-UPDATED: 2026-06-05 09:43 CT | SEQ: 5 | LEAD: Forward T+1 drain fix — fetch-before-drain so every bot fills at next-day open; buying-power guard; 185 tests green
+LAST-UPDATED: 2026-06-05 10:46 CT | SEQ: 6 | LEAD: Bot-health monitor + tiered auto-fixer live (stock_health.py + systemd timer); forward T+1 drain fix deployed
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code).*
@@ -400,6 +400,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Freshness stamp adds time-of-day (CT); SEQ 2; logged 31f5f73 | adebd4f |
 | 2026-06-05 | Main-chat→CC MCP dispatch wired — `claude mcp serve` connected to Claude Desktop; standalone `claude` CLI v2.1.165 installed at `C:\Users\Byars\.local\bin\claude.exe`; copy-paste handoff retired; bypassPermissionsGateByAccount kept false (Auto-mode trust plan) | docs-only |
 | 2026-06-05 | Forward T+1 drain fix — fetch-before-drain so every bot fills at next-day open (momentum's stranded CRM/VRTX will now fill); SELLs-first buying-power guard; per-bot queued/filled/carried logging; injectable price_source for tests; 13 new tests (185 total) | cb0783b |
+| 2026-06-05 | Bot-health monitor + tiered auto-fixer — stock_health.py (diagnose from live registry; safe-allowlist auto-fix; concurrency/allowlist/false-positive adversarially audited); systemd timer Mon–Fri 18:30 + 08/12/22 CT as www-data with one NOPASSWD sudo; 26 tests (211 total) | c1fa9f5 |
 
 ---
 
@@ -451,6 +452,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Main-chat ↔ CC MCP dispatch wired (`claude mcp serve` + Claude Desktop MCP client) | Eliminates the copy-paste handoff between planning and execution seats. Main chat invokes CC tools directly via MCP; results land in the conversation. Per-action approval stays in Desktop UI (controlled by `bypassPermissionsGateByAccount`). Supersedes "MCP-dispatch abandoned" framing from 2026-06-04 — the architecture changed because Claude Desktop natively implements the MCP client side, removing the need for a custom orchestrator process | 2026-06-05 |
 | `bypassPermissionsGateByAccount` kept FALSE during initial MCP dispatch period | Per Auto-mode trust plan in `memory/workflow_structure.md`: relax per-command prompts only after demonstrated trust (~2 weeks of plan-gated builds where prompts are effectively rubber stamps). Flipping the switch on day one removes the human checkpoint before any track record exists; backups don't refund credential leaks, force-pushes, or irreversible deletes. The flag is blanket (no "ask only for dangerous stuff" middle setting) — right time to flip is after observed trust, not before | 2026-06-05 |
 | Forward drain fetches universe before filling (fetch-before-drain) | The drain filled via `get_open` (a cache read) BEFORE the per-bot universe fetch warmed that cache, so the first SP500_100 bot in registry order (momentum) never filled — caches lacked today's bar at drain time, stranding orders indefinitely (CRM queued since 2026-06-03). Fix: fetch universe + carried tickers first, then drain reading `df['Open'].get(today)` exactly like backtest, so all bots fill regardless of order. Scoped freeze exception to `run_forward_step` only; backtest untouched. Added SELLs-first buying-power guard (carried backlog can't over-commit; never negative) and per-bot queued/filled/carried logging | 2026-06-05 |
+| Bot-health auto-fixer is tiered: auto-remediate safe ops, escalate the rest | A 24/7 monitor that auto-fixed everything could corrupt append-only forward data or deploy bad code unattended. stock_health.py auto-fixes ONLY a hard allowlist (restart_service, idempotent rerun_forward, clear_stale_lock, rewarm_cache) and escalates all else (negative cash, duplicate fills, logic bugs). Refuses rerun_forward in the 17:55–18:25 CT scheduler window (the idempotency guard is not concurrency-safe — confirmed by adversarial audit); runs as www-data with one NOPASSWD sudo (restart corpus only). Mirrors the Auto-mode trust philosophy — earn unattended action on the safe tier, keep humans on the risky tier | 2026-06-05 |
 
 ---
 
