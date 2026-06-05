@@ -1,4 +1,4 @@
-LAST-UPDATED: 2026-06-05 10:46 CT | SEQ: 6 | LEAD: Bot-health monitor + tiered auto-fixer live (stock_health.py + systemd timer); forward T+1 drain fix deployed
+LAST-UPDATED: 2026-06-05 11:37 CT | SEQ: 7 | LEAD: Engine hardened — forward-run lock + atomic fill + halt circuit breaker (deployed); Project C renamed BOURSE
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code).*
@@ -63,7 +63,7 @@ All project identities are defined in the `PROJECTS` dict at the top of `app.py`
 |----|------|--------|-------|-------|-------------|
 | RE_A | RE_A | ACTIVE | `#00ff88` | `/dashboard` | CRE job search agent |
 | B | Project B | PLACEHOLDER | `#1a7fff` | `/project-b` | Prediction Market Arbitrage Bot |
-| C | Project C | ACTIVE | `#ff8800` | `/project-c` | Stock trading simulation lab — Phase 1 live |
+| C | BOURSE | ACTIVE | `#ff8800` | `/project-c` | Stock market modeling & trading agents — Phase 1 live (renamed from "Project C" 2026-06-05) |
 | D | Project D | PLACEHOLDER | `#ff3535` | `/project-d` | Artistic / Creative Project |
 | E | Project E | PLACEHOLDER | `#00c8e8` | `/project-e` | Automated Media Clipper |
 | F | Project F | PLACEHOLDER | `#e8c400` | `/project-f` | HTML Mini Game |
@@ -187,7 +187,7 @@ SPOTIFY_REDIRECT_URI=https://corpusbc.duckdns.org/callback
 
 ---
 
-## PROJECT C — STOCK TRADING SIMULATION LAB
+## BOURSE (Project C) — STOCK TRADING SIMULATION LAB
 
 **Route:** `/project-c` | **Status:** ACTIVE — Phase 1 complete 2026-06-03
 
@@ -401,6 +401,8 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-05 | Main-chat→CC MCP dispatch wired — `claude mcp serve` connected to Claude Desktop; standalone `claude` CLI v2.1.165 installed at `C:\Users\Byars\.local\bin\claude.exe`; copy-paste handoff retired; bypassPermissionsGateByAccount kept false (Auto-mode trust plan) | docs-only |
 | 2026-06-05 | Forward T+1 drain fix — fetch-before-drain so every bot fills at next-day open (momentum's stranded CRM/VRTX will now fill); SELLs-first buying-power guard; per-bot queued/filled/carried logging; injectable price_source for tests; 13 new tests (185 total) | cb0783b |
 | 2026-06-05 | Bot-health monitor + tiered auto-fixer — stock_health.py (diagnose from live registry; safe-allowlist auto-fix; concurrency/allowlist/false-positive adversarially audited); systemd timer Mon–Fri 18:30 + 08/12/22 CT as www-data with one NOPASSWD sudo; 26 tests (211 total) | c1fa9f5 |
+| 2026-06-05 | Engine hardening — per-bot forward-run lock (O_EXCL), atomic fill+dequeue (one broker txn), forward snapshot plain-INSERT that halts on duplicate; trading-halt circuit breaker (run_forward_bots/step honor it; health sets on critical integrity; `stock_health.py --resume` clears); +20 tests (230 total); adversarially verified | 712becd |
+| 2026-06-05 | Rename Project C → BOURSE (system_name + sidebar acronym + page header); route/API unchanged. Deployed; health unit reinstalled (.env removed, least-privilege) | 9510e2b |
 
 ---
 
@@ -453,6 +455,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | `bypassPermissionsGateByAccount` kept FALSE during initial MCP dispatch period | Per Auto-mode trust plan in `memory/workflow_structure.md`: relax per-command prompts only after demonstrated trust (~2 weeks of plan-gated builds where prompts are effectively rubber stamps). Flipping the switch on day one removes the human checkpoint before any track record exists; backups don't refund credential leaks, force-pushes, or irreversible deletes. The flag is blanket (no "ask only for dangerous stuff" middle setting) — right time to flip is after observed trust, not before | 2026-06-05 |
 | Forward drain fetches universe before filling (fetch-before-drain) | The drain filled via `get_open` (a cache read) BEFORE the per-bot universe fetch warmed that cache, so the first SP500_100 bot in registry order (momentum) never filled — caches lacked today's bar at drain time, stranding orders indefinitely (CRM queued since 2026-06-03). Fix: fetch universe + carried tickers first, then drain reading `df['Open'].get(today)` exactly like backtest, so all bots fill regardless of order. Scoped freeze exception to `run_forward_step` only; backtest untouched. Added SELLs-first buying-power guard (carried backlog can't over-commit; never negative) and per-bot queued/filled/carried logging | 2026-06-05 |
 | Bot-health auto-fixer is tiered: auto-remediate safe ops, escalate the rest | A 24/7 monitor that auto-fixed everything could corrupt append-only forward data or deploy bad code unattended. stock_health.py auto-fixes ONLY a hard allowlist (restart_service, idempotent rerun_forward, clear_stale_lock, rewarm_cache) and escalates all else (negative cash, duplicate fills, logic bugs). Refuses rerun_forward in the 17:55–18:25 CT scheduler window (the idempotency guard is not concurrency-safe — confirmed by adversarial audit); runs as www-data with one NOPASSWD sudo (restart corpus only). Mirrors the Auto-mode trust philosophy — earn unattended action on the safe tier, keep humans on the risky tier | 2026-06-05 |
+| Forward run is concurrency-safe via a real lock + atomic fill/dequeue; an integrity breach HALTS trading | The health monitor's auto-rerun turned the no-lock forward run into a live double-fill risk (adversarial audit). Fix (human-approved engine-freeze exception): per-bot O_EXCL forward lock held across the whole run; fill + pending-dequeue in ONE broker transaction; forward snapshot changed INSERT OR REPLACE → INSERT so a duplicate raises + rolls back + sets a trading-halt flag instead of silently overwriting append-only truth. Circuit breaker: a critical integrity breach (dup fills, negative cash/shares, dup snapshot) halts ALL forward runs until a human clears it (`stock_health.py --resume`); operational issues still auto-heal. Both paths verified clean by adversarial review | 2026-06-05 |
 
 ---
 
