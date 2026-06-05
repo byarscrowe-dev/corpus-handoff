@@ -1,4 +1,4 @@
-LAST-UPDATED: 2026-06-04 19:59 CT | SEQ: 3 | LEAD: Project C — 9 bots forward-live; first 6 PM run VERIFIED (KI#12 passed); boot calibration now API-verified
+LAST-UPDATED: 2026-06-05 06:20 CT | SEQ: 4 | LEAD: MCP dispatch live - claude mcp serve wired into Desktop; copy-paste handoff retired
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code).*
@@ -332,7 +332,7 @@ Boots automatically via `CLAUDE.md` auto-boot (commit 99aacc6) — no user actio
 3. Verify the doc's `LAST-UPDATED` stamp (SEQ + time) matches the API commit message.
 4. Mismatch = STALE → immediately, without asking, run the retry ladder, re-verifying after each step: (a) `?v=YYYYMMDD` cache-buster on the raw URL; (b) `https://github.com/byarscrowe-dev/corpus-handoff/raw/main/CORPUS_HANDOFF_FULL.md`; (c) the browser blob view `https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md`. Never proceed on a stale copy.
 5. Echo: API SHA + timestamp, the `LAST-UPDATED` line verbatim, the 3 newest SESSION LOG rows, and the verdict — CURRENT or STALE. Proceed only when CURRENT.
-**End:** Main chat can READ the source of truth and memory but CANNOT WRITE to them. Anything that must persist routes as a dispatch prompt to a Code session — only CC writes.
+**End:** Main chat now writes to memory and docs directly via the MCP-wired `claude-code` tools (as of 2026-06-05, SEQ 4). The Update Protocol below still applies — SEQ bump, freshness stamp, dual-repo push, mirror commit message format. Task-scoped CC sessions remain preferred for substantial code work; the bifurcation philosophy (ideation in Chat / execution in Code) holds even when the seats share the same connection.
 
 ### Standing Rules (always apply)
 1. **Three-tier model:** (a) credentials → `.env` only, never in any doc/memory/chat; (b) private context → CC memory files — may be backed up to the PRIVATE Corpus repo only (never the public mirror), after a secrets scan (precedent 8c1c67f); (c) shareable context → this public handoff doc. Sort every new piece of information into one tier at creation.
@@ -398,6 +398,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | CC memory folder backed up to private repo (memory/); memory/ excluded from deploy | 8c1c67f |
 | 2026-06-04 | Handoff protocol v3 — auto-boot era, freshness stamp, materiality rule; doc SESSION PROTOCOLS section updated to v3 | 31f5f73 |
 | 2026-06-04 | Freshness stamp adds time-of-day (CT); SEQ 2; logged 31f5f73 | adebd4f |
+| 2026-06-05 | Main-chat→CC MCP dispatch wired — `claude mcp serve` connected to Claude Desktop; standalone `claude` CLI v2.1.165 installed at `C:\Users\Byars\.local\bin\claude.exe`; copy-paste handoff retired; bypassPermissionsGateByAccount kept false (Auto-mode trust plan) | docs-only |
 
 ---
 
@@ -446,6 +447,8 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Scope default: reported issues apply to all bots/families unless explicitly narrowed | CORPUS is one system — partial fixes create inconsistent views that erode trust in the data. Standardization across all families is the default posture; deviations require a design discussion | 2026-06-04 |
 | No silent cross-mode substitution: explicit mode shows only that mode's data | Silently swapping backtest data into a forward view or vice versa made the chart x-axis lie (2022 dates appearing in a "forward" view), hid missing data behind misleading BACKTEST badges, and created a false sense that forward data existed. Honest empty/PENDING states are less visually impressive but always accurate. The defaultModeForBots fallback chain is separate — it determines which mode is selected by default, not what renders | 2026-06-04 |
 | Test fixture collision: always wipe relevant snapshot rows before seeding | Two incidents — C29: a pre-existing backtest snapshot at today's date masked the seeded 2024-12-31 test row (bt_snap ORDER BY DESC LIMIT 1 returned wrong row). C27/C28: Section B's run_forward_step wrote a forward snapshot for momentum with cash=75k from Section A's idempotency test; that row persisted into C24's mode comparison. Fix in both cases: DELETE FROM c_equity_snapshots WHERE bot_id=? (full bot, not just the specific date/mode) before seeding. Rule: scope the delete broadly | 2026-06-04 |
+| Main-chat ↔ CC MCP dispatch wired (`claude mcp serve` + Claude Desktop MCP client) | Eliminates the copy-paste handoff between planning and execution seats. Main chat invokes CC tools directly via MCP; results land in the conversation. Per-action approval stays in Desktop UI (controlled by `bypassPermissionsGateByAccount`). Supersedes "MCP-dispatch abandoned" framing from 2026-06-04 — the architecture changed because Claude Desktop natively implements the MCP client side, removing the need for a custom orchestrator process | 2026-06-05 |
+| `bypassPermissionsGateByAccount` kept FALSE during initial MCP dispatch period | Per Auto-mode trust plan in `memory/workflow_structure.md`: relax per-command prompts only after demonstrated trust (~2 weeks of plan-gated builds where prompts are effectively rubber stamps). Flipping the switch on day one removes the human checkpoint before any track record exists; backups don't refund credential leaks, force-pushes, or irreversible deletes. The flag is blanket (no "ask only for dangerous stuff" middle setting) — right time to flip is after observed trust, not before | 2026-06-05 |
 
 ---
 
@@ -492,16 +495,17 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 ---
 
-## WORKFLOW — DISPATCH & EXECUTION (migration complete 2026-06-04)
+## WORKFLOW — DISPATCH & EXECUTION (MCP dispatch wired 2026-06-05)
 
-**Status: COMPLETE as of 2026-06-04.** The dispatch-agent transition is done; the structure below is live, not planned.
+**Status: MCP DISPATCH LIVE as of 2026-06-05.** Claude Desktop main chat drives Claude Code directly via `claude mcp serve` — the copy-paste handoff between planning and execution seats is retired. Supersedes the earlier 2026-06-04 framing that "MCP-dispatch architecture is abandoned."
 
-- **Execution is native in the Claude Code tab.** Flow: plan-gate → human approves the plan → Accept-edits execution for file edits, with terminal and git commands still individually gated (explicit approval each time).
-- **CLAUDE.md auto-boot is live** (commit `99aacc6`). Every session loads `CLAUDE.md` at the repo root, which routes to the two mandatory-read files (`memory/project_c.md`, `docs/CORPUS_HANDOFF_FULL.md`) and inlines the hard rules.
-- **Visual verification uses Claude Code's built-in preview** — this replaced the earlier Playwright-MCP plan.
-- **MCP-dispatch architecture is abandoned** as the active plan (a separate orchestrator brain registering CC as an MCP server via `claude mcp serve`). It remains a KNOWN FALLBACK if a dedicated orchestrator is ever wanted.
-- **The claude.ai web thread is retired** as the predecessor planning seat. Ideation/strategy now lives in the Chat tab with full cross-project context; builds run in task-scoped Code sessions; written dispatch prompts are the handoff.
-- **Workflow vision, the ideation/execution bifurcation, and the Auto-mode trust plan live in `memory/workflow_structure.md`** (private memory) — evaluate future workflow decisions against it.
+- **Two seats, one connection.** Ideation/strategy still lives in the Chat tab (full cross-project context, design forks, roadmap). Execution still happens through Claude Code's tools. What changed: the handoff. Main chat invokes CC's MCP-exposed tools (Read / Write / Edit / Bash / PowerShell / Glob / etc.) directly; results land in the conversation. No more "write a dispatch prompt → paste into a CC session → relay results back."
+- **CC connection setup (Windows):** standalone `claude` CLI installed via Anthropic's native PowerShell installer (`irm https://claude.ai/install.ps1 | iex`) → `C:\Users\Byars\.local\bin\claude.exe` v2.1.165, auto-updating. Claude Desktop config has `mcpServers.claude-code` with command `cmd` and args `["/c", "claude", "mcp", "serve"]` — the `cmd /c` wrapper is required on Windows because the spawned process can't resolve `.cmd` shims directly. Restart Desktop to load. Server status visible at Settings → Developer → claude-code (should read `running`).
+- **Per-action approval stays in Desktop UI.** The `bypassPermissionsGateByAccount` flag in Claude Desktop's config governs whether each tool call prompts for approval. **Kept FALSE** during the trust-building period — per the Auto-mode trust plan in `memory/workflow_structure.md`, prompts stay until they're demonstrably rubber stamps (~2 weeks of observed behavior). The flag is blanket — flipping it on day one removes the human checkpoint before any track record exists; backups don't refund credential leaks, force-pushes, or irreversible deletes.
+- **CLAUDE.md auto-boot still live** (commit `99aacc6`). Every CC session loads `CLAUDE.md` at the repo root and routes to mandatory reads (`memory/project_c.md`, `docs/CORPUS_HANDOFF_FULL.md`).
+- **Visual verification uses Claude Code's built-in preview** — unchanged.
+- **Task-scoped CC sessions remain preferred for substantial multi-file builds** — the bifurcation philosophy holds even when the seats share an MCP connection. Main chat with CC tools is best for quick reads, single-file edits, doc maintenance, and orchestration; dedicated CC sessions are still right for plan-gated builds.
+- **Workflow vision, bifurcation, and the Auto-mode trust plan live in `memory/workflow_structure.md`** (private memory) — evaluate future workflow decisions against it.
 
 ---
 
