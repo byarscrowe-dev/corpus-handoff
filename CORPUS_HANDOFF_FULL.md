@@ -1,4 +1,4 @@
-LAST-UPDATED: 2026-06-05 11:37 CT | SEQ: 7 | LEAD: Engine hardened — forward-run lock + atomic fill + halt circuit breaker (deployed); Project C renamed BOURSE
+LAST-UPDATED: 2026-06-05 13:35 CT | SEQ: 8 | LEAD: Security sweep #1 done — fix-now web hardening deployed (CSRF/headers/.env/scrapers/token/PII-untrack); real-money blockers parked
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code).*
@@ -403,6 +403,10 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-05 | Bot-health monitor + tiered auto-fixer — stock_health.py (diagnose from live registry; safe-allowlist auto-fix; concurrency/allowlist/false-positive adversarially audited); systemd timer Mon–Fri 18:30 + 08/12/22 CT as www-data with one NOPASSWD sudo; 26 tests (211 total) | c1fa9f5 |
 | 2026-06-05 | Engine hardening — per-bot forward-run lock (O_EXCL), atomic fill+dequeue (one broker txn), forward snapshot plain-INSERT that halts on duplicate; trading-halt circuit breaker (run_forward_bots/step honor it; health sets on critical integrity; `stock_health.py --resume` clears); +20 tests (230 total); adversarially verified | 712becd |
 | 2026-06-05 | Rename Project C → BOURSE (system_name + sidebar acronym + page header); route/API unchanged. Deployed; health unit reinstalled (.env removed, least-privilege) | 9510e2b |
+| 2026-06-05 | Docs SEQ 7 — engine hardening + circuit breaker + BOURSE recorded; user pref "define jargon" saved to memory | ca403e8 |
+| 2026-06-05 | Untrack linkedin_connections.csv (PII) — git rm --cached; .gitignore now effective; server file preserved + untracked during deploy | 19ff084 |
+| 2026-06-05 | Security sweep #1 fix-now hardening — SECRET_KEY never public-default; security headers (HSTS/X-Frame/nosniff/Referrer/CSP frame-ancestors); token-less CSRF Origin/Referer guard; removed runtime pip-install (supply-chain RCE); scraper size(8MB)+redirect(5) caps; Spotify token scoped to /project-g + console logs removed; project_g.html XSS escaping; setup_server.sh re-run guard. `.env` perms → 640 root:www-data (server). Deployed; 230 bot + 65 web tests green | 2c52eea |
+| 2026-06-05 | /security-sweep + /health-sweep slash commands + saved security-sweep workflow (.claude/) | ba34634 |
 
 ---
 
@@ -456,6 +460,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Forward drain fetches universe before filling (fetch-before-drain) | The drain filled via `get_open` (a cache read) BEFORE the per-bot universe fetch warmed that cache, so the first SP500_100 bot in registry order (momentum) never filled — caches lacked today's bar at drain time, stranding orders indefinitely (CRM queued since 2026-06-03). Fix: fetch universe + carried tickers first, then drain reading `df['Open'].get(today)` exactly like backtest, so all bots fill regardless of order. Scoped freeze exception to `run_forward_step` only; backtest untouched. Added SELLs-first buying-power guard (carried backlog can't over-commit; never negative) and per-bot queued/filled/carried logging | 2026-06-05 |
 | Bot-health auto-fixer is tiered: auto-remediate safe ops, escalate the rest | A 24/7 monitor that auto-fixed everything could corrupt append-only forward data or deploy bad code unattended. stock_health.py auto-fixes ONLY a hard allowlist (restart_service, idempotent rerun_forward, clear_stale_lock, rewarm_cache) and escalates all else (negative cash, duplicate fills, logic bugs). Refuses rerun_forward in the 17:55–18:25 CT scheduler window (the idempotency guard is not concurrency-safe — confirmed by adversarial audit); runs as www-data with one NOPASSWD sudo (restart corpus only). Mirrors the Auto-mode trust philosophy — earn unattended action on the safe tier, keep humans on the risky tier | 2026-06-05 |
 | Forward run is concurrency-safe via a real lock + atomic fill/dequeue; an integrity breach HALTS trading | The health monitor's auto-rerun turned the no-lock forward run into a live double-fill risk (adversarial audit). Fix (human-approved engine-freeze exception): per-bot O_EXCL forward lock held across the whole run; fill + pending-dequeue in ONE broker transaction; forward snapshot changed INSERT OR REPLACE → INSERT so a duplicate raises + rolls back + sets a trading-halt flag instead of silently overwriting append-only truth. Circuit breaker: a critical integrity breach (dup fills, negative cash/shares, dup snapshot) halts ALL forward runs until a human clears it (`stock_health.py --resume`); operational issues still auto-heal. Both paths verified clean by adversarial review | 2026-06-05 |
+| Security: defense-in-depth web hardening now; per-user auth / audit log / secrets vault / DB encryption / rate-limiting deferred to a pre-real-money project | First of a planned series of read-only security sweeps (runnable via `/security-sweep`). Sweep #1 confirmed clean: no SQL/command injection, secrets not in git history, nginx Basic Auth + TLS on ALL routes (auth_basic at server level), gunicorn no-debug, sudoers one-line, requests 2.34.2 / gunicorn 26.0 (patched). Fix-now items shipped (2c52eea). The single shared Basic-Auth model is the #1 real-money blocker — app-layer auth + 2FA + audit log + secrets manager + at-rest encryption + fail2ban must precede any real funds (see Parking Lot) | 2026-06-05 |
 
 ---
 
@@ -469,6 +474,9 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 ---
 
 ## PARKING LOT — IDEAS NOT YET STARTED
+
+**Real-money security hardening (pre-funds project — from security sweep #1, 2026-06-05)**
+Required before connecting any real money/brokerage: (1) **app-layer auth** — per-user accounts + hashed passwords + server-side sessions, with step-up **2FA** around money-moving actions (today everything rests on one shared nginx Basic Auth password — the #1 blocker); (2) **append-only audit log** (actor / action / params / timestamp / IP) of every state-changing action; (3) **secrets manager** instead of plaintext `.env` + run money components under a separate unprivileged account; (4) **DB encryption at rest** (SQLCipher / LUKS) + backup restore-verification (`PRAGMA integrity_check`); (5) **app-layer rate limiting** (Flask-Limiter) + **fail2ban** on Basic Auth (not currently running); (6) pin + hash-lock `requirements.txt` + add `pip-audit`/Dependabot. Re-run `/security-sweep` each round to track progress. (Detailed file:line findings from sweep #1 are in the session workflow output, not committed.)
 
 **Project B — Prediction Market Arbitrage Bot**
 Monitor Polymarket and Kalshi simultaneously for arbitrage opportunities — same event priced differently across platforms. Needs real-time price feeds, arbitrage detection layer, eventually trade execution. Open questions: event name mapping across platforms, fee structure minimum spread, rate limits.
