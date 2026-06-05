@@ -1,4 +1,4 @@
-LAST-UPDATED: 2026-06-05 06:20 CT | SEQ: 4 | LEAD: MCP dispatch live - claude mcp serve wired into Desktop; copy-paste handoff retired
+LAST-UPDATED: 2026-06-05 09:43 CT | SEQ: 5 | LEAD: Forward T+1 drain fix — fetch-before-drain so every bot fills at next-day open; buying-power guard; 185 tests green
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code).*
@@ -237,7 +237,7 @@ Results are **survivorship-biased** (current SP500_100 universe). Key finding: c
 
 ### Scheduler
 
-`run_all_forward_bots` fires at **6:00 PM CT weekdays** (3h after market close — yfinance data has propagated). First run 2026-06-03. Forward rows are append-only.
+`run_all_forward_bots` fires at **6:00 PM CT weekdays** (3h after market close — yfinance data has propagated). First run 2026-06-03. Forward rows are append-only. **Two distinct crons exist:** the **8:00 AM CT** cron is RE_A `refresh_job_listings` (job search), unrelated to Project C; the **6:00 PM CT Mon–Fri** cron is Project C `run_all_forward_bots`. Each forward run is two-phase — drain `c_pending_orders` at today's open, then generate signals and queue next-day orders — sharing backtest's T+1 fill semantics.
 
 ### UI structure (2026-06-04)
 
@@ -399,6 +399,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Handoff protocol v3 — auto-boot era, freshness stamp, materiality rule; doc SESSION PROTOCOLS section updated to v3 | 31f5f73 |
 | 2026-06-04 | Freshness stamp adds time-of-day (CT); SEQ 2; logged 31f5f73 | adebd4f |
 | 2026-06-05 | Main-chat→CC MCP dispatch wired — `claude mcp serve` connected to Claude Desktop; standalone `claude` CLI v2.1.165 installed at `C:\Users\Byars\.local\bin\claude.exe`; copy-paste handoff retired; bypassPermissionsGateByAccount kept false (Auto-mode trust plan) | docs-only |
+| 2026-06-05 | Forward T+1 drain fix — fetch-before-drain so every bot fills at next-day open (momentum's stranded CRM/VRTX will now fill); SELLs-first buying-power guard; per-bot queued/filled/carried logging; injectable price_source for tests; 13 new tests (185 total) | cb0783b |
 
 ---
 
@@ -449,6 +450,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Test fixture collision: always wipe relevant snapshot rows before seeding | Two incidents — C29: a pre-existing backtest snapshot at today's date masked the seeded 2024-12-31 test row (bt_snap ORDER BY DESC LIMIT 1 returned wrong row). C27/C28: Section B's run_forward_step wrote a forward snapshot for momentum with cash=75k from Section A's idempotency test; that row persisted into C24's mode comparison. Fix in both cases: DELETE FROM c_equity_snapshots WHERE bot_id=? (full bot, not just the specific date/mode) before seeding. Rule: scope the delete broadly | 2026-06-04 |
 | Main-chat ↔ CC MCP dispatch wired (`claude mcp serve` + Claude Desktop MCP client) | Eliminates the copy-paste handoff between planning and execution seats. Main chat invokes CC tools directly via MCP; results land in the conversation. Per-action approval stays in Desktop UI (controlled by `bypassPermissionsGateByAccount`). Supersedes "MCP-dispatch abandoned" framing from 2026-06-04 — the architecture changed because Claude Desktop natively implements the MCP client side, removing the need for a custom orchestrator process | 2026-06-05 |
 | `bypassPermissionsGateByAccount` kept FALSE during initial MCP dispatch period | Per Auto-mode trust plan in `memory/workflow_structure.md`: relax per-command prompts only after demonstrated trust (~2 weeks of plan-gated builds where prompts are effectively rubber stamps). Flipping the switch on day one removes the human checkpoint before any track record exists; backups don't refund credential leaks, force-pushes, or irreversible deletes. The flag is blanket (no "ask only for dangerous stuff" middle setting) — right time to flip is after observed trust, not before | 2026-06-05 |
+| Forward drain fetches universe before filling (fetch-before-drain) | The drain filled via `get_open` (a cache read) BEFORE the per-bot universe fetch warmed that cache, so the first SP500_100 bot in registry order (momentum) never filled — caches lacked today's bar at drain time, stranding orders indefinitely (CRM queued since 2026-06-03). Fix: fetch universe + carried tickers first, then drain reading `df['Open'].get(today)` exactly like backtest, so all bots fill regardless of order. Scoped freeze exception to `run_forward_step` only; backtest untouched. Added SELLs-first buying-power guard (carried backlog can't over-commit; never negative) and per-bot queued/filled/carried logging | 2026-06-05 |
 
 ---
 
