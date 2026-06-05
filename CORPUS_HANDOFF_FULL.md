@@ -1,4 +1,4 @@
-LAST-UPDATED: 2026-06-04 | SEQ: 1 | LEAD: Project C live — 9 bots, nightly 6 PM forward runs; auto-boot + handoff protocol v3 shipped
+LAST-UPDATED: 2026-06-04 19:21 CT | SEQ: 2 | LEAD: Project C live — 9 bots, nightly 6 PM forward runs; auto-boot + handoff protocol v3 shipped
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code). Main-repo commit: 99aacc6.*
@@ -391,6 +391,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | CLAUDE.md auto-boot pointer — routes every session to memory + handoff, inlines hard rules | 99aacc6 |
 | 2026-06-04 | Workflow migration marked complete in handoff; session-log + header commit truth-up | 69cbd37 |
 | 2026-06-04 | CC memory folder backed up to private repo (memory/); memory/ excluded from deploy | 8c1c67f |
+| 2026-06-04 | Handoff protocol v3 — auto-boot era, freshness stamp, materiality rule; doc SESSION PROTOCOLS section updated to v3 | 31f5f73 |
 
 ---
 
