@@ -1,7 +1,7 @@
-LAST-UPDATED: 2026-06-04 19:21 CT | SEQ: 2 | LEAD: Project C live — 9 bots, nightly 6 PM forward runs; auto-boot + handoff protocol v3 shipped
+LAST-UPDATED: 2026-06-04 19:59 CT | SEQ: 3 | LEAD: Project C — 9 bots forward-live; first 6 PM run VERIFIED (KI#12 passed); boot calibration now API-verified
 
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Main-repo commit: 99aacc6.*
+*Single document for all Claude sessions (main chat + Claude Code).*
 
 ---
 
@@ -263,7 +263,7 @@ Tab strip: `[ OVERVIEW ] [ MOMENTUM BOTS ] [ CHAOS BOTS ] [ SPY BUY & HOLD ] [ E
 
 Capitol Trades political disclosure bot → Claude-static bots → GDELT news bot → 13F follower → Claude Live API bot → AI-ETF mirror bot. `stock_ingest.py` stub is already in place for Phase 2.
 
-**Bots as of 2026-06-04 (10 total, 9 active):** Momentum ladder v1(50)/v2(80)/v3(35)/v4(40)/v5(25); chaos_random (uniform/sell=10%), chaos_lazy (uniform/sell=0%), chaos_hot (recent_winners/sell=10%); spy_benchmark; twitter_x (shelved). Baseline backtests complete for all 9 — see results table above. Forward: momentum/momentum_v2/spy_benchmark have 1 row from 2026-06-03; full 9-bot runs begin tonight (6 PM CT). Verify: journalctl ran=9 skipped=1 failed=0; 9 rows dated 2026-06-04; SPY value diverges from $100k (KI#12 fix production test).
+**Bots as of 2026-06-04 (10 total, 9 active):** Momentum ladder v1(50)/v2(80)/v3(35)/v4(40)/v5(25); chaos_random (uniform/sell=10%), chaos_lazy (uniform/sell=0%), chaos_hot (recent_winners/sell=10%); spy_benchmark; twitter_x (shelved). Baseline backtests complete for all 9 — see results table above. Forward: all 9 active bots now have rows dated 2026-06-04; momentum/momentum_v2/spy_benchmark also carry the 2026-06-03 row. **Forward run 2026-06-04 (6 PM CT) — VERIFIED:** ran=9 skipped=1 failed=0; 9 forward rows dated 2026-06-04; spy_benchmark $100,658.69 (queued buy filled), momentum_v2 $99,819.04, the other 7 flat at $100k. **KI#12 production test PASSED** — a bot diverged from $100k, so the UI default mode now flips to forward.
 
 **Phase 2 — Capitol Trades design questions:** data source (capitoltrades.com scrape vs Quiver Quant API vs raw House/Senate disclosures), signal rules (buy on first disclosure? accumulate? threshold?), universe (trades may be outside SP500), disclosure lag ~45 days (edge likely decayed — bot tests whether signal survives).
 
@@ -323,10 +323,15 @@ Always begin every CC session with: **"Read all memory files first for full cont
 ## SESSION PROTOCOLS
 
 ### New Claude Code / Code session
-Boots automatically via `CLAUDE.md` auto-boot (commit 99aacc6) — no user action. The full CC-side procedure (meaningful-checkpoint rule, doc + mirror push sequence, freshness-stamp bump) lives in `memory/handoff_protocol.md` (v3). Fallback if a session seems uncalibrated: *"Read all memory files first, including handoff_protocol.md."*
+Boots automatically via `CLAUDE.md` auto-boot (commit 99aacc6) — no user action. The full CC-side procedure (meaningful-checkpoint rule, doc + mirror push sequence, freshness-stamp bump) lives in `memory/handoff_protocol.md` (v3). Mirror pushes to corpus-handoff use the commit message `handoff: SEQ N | YYYY-MM-DD HH:MM CT | <LEAD>`, so the GitHub commits API carries the expected SEQ (freshness ground truth). Fallback if a session seems uncalibrated: *"Read all memory files first, including handoff_protocol.md."*
 
 ### New Main Chat Session (always inside the CORPUS project)
-**Start:** Fetch this doc from the public raw URL: `https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md`. Echo the `LAST-UPDATED:` stamp (the doc's first line) verbatim, plus the three most recent SESSION LOG entries, and only then proceed. If stale — old date, or content not leading with current state — run the retry ladder: cache-buster `?v=YYYYMMDD` on the raw URL, then the GitHub browser view (`https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md`). Freshness = the stamp + content, **NOT** commit-hash matching: the header tracks the MAIN repo commit, and mirror-push hashes differ by design (2026-06-04 incident).
+**Start — verify against the GitHub commits API (ground truth: content caches can lie, the API can't):**
+1. Fetch `https://api.github.com/repos/byarscrowe-dev/corpus-handoff/commits/main` → read the latest commit's SHA, message, and timestamp. The message is `handoff: SEQ N | YYYY-MM-DD HH:MM CT | <LEAD>` and states the expected SEQ + time. (Match SEQ + time from the MESSAGE, not the SHA — mirror SHAs differ from the main repo by design; 2026-06-04 incident.)
+2. Fetch the raw doc: `https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md`.
+3. Verify the doc's `LAST-UPDATED` stamp (SEQ + time) matches the API commit message.
+4. Mismatch = STALE → immediately, without asking, run the retry ladder, re-verifying after each step: (a) `?v=YYYYMMDD` cache-buster on the raw URL; (b) `https://github.com/byarscrowe-dev/corpus-handoff/raw/main/CORPUS_HANDOFF_FULL.md`; (c) the browser blob view `https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md`. Never proceed on a stale copy.
+5. Echo: API SHA + timestamp, the `LAST-UPDATED` line verbatim, the 3 newest SESSION LOG rows, and the verdict — CURRENT or STALE. Proceed only when CURRENT.
 **End:** Main chat can READ the source of truth and memory but CANNOT WRITE to them. Anything that must persist routes as a dispatch prompt to a Code session — only CC writes.
 
 ### Standing Rules (always apply)
@@ -392,6 +397,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Workflow migration marked complete in handoff; session-log + header commit truth-up | 69cbd37 |
 | 2026-06-04 | CC memory folder backed up to private repo (memory/); memory/ excluded from deploy | 8c1c67f |
 | 2026-06-04 | Handoff protocol v3 — auto-boot era, freshness stamp, materiality rule; doc SESSION PROTOCOLS section updated to v3 | 31f5f73 |
+| 2026-06-04 | Freshness stamp adds time-of-day (CT); SEQ 2; logged 31f5f73 | adebd4f |
 
 ---
 
@@ -445,7 +451,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 
 ## IMMEDIATE NEXT ACTIONS
 
-1. Verify tonight's forward run (6 PM CT) — journalctl `ran=9 skipped=1 failed=0`; 9 forward rows dated 2026-06-04; SPY value diverges from $100k (first production test of KI#12 default_mode logic)
+1. ✅ **DONE 2026-06-04** — forward run verified: ran=9 skipped=1 failed=0; 9 rows dated 2026-06-04; spy_benchmark $100,658.69, momentum_v2 $99,819.04; KI#12 production test passed (UI default mode now flips to forward). Next: let forward data accumulate over the coming days/weeks.
 2. Plan Phase 2 — Capitol Trades political disclosure bot (design session needed; `stock_ingest.py` Phase 2 stub ready; see design questions above)
 3. Multi-horizon robustness panel design session — once meaningful forward data accumulates (weeks/months)
 4. Future chaos exploration: churn-rate ladder (sell_prob never/10%/30%) — pure-randomness variable isolation
