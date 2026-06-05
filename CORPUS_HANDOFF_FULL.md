@@ -1,5 +1,7 @@
+LAST-UPDATED: 2026-06-04 | SEQ: 1 | LEAD: Project C live — 9 bots, nightly 6 PM forward runs; auto-boot + handoff protocol v3 shipped
+
 # CORPUS — Source of Truth
-*Single document for all Claude sessions (main chat + Claude Code). Last updated: 2026-06-04 | Commit: 99aacc6*
+*Single document for all Claude sessions (main chat + Claude Code). Main-repo commit: 99aacc6.*
 
 ---
 
@@ -320,17 +322,15 @@ Always begin every CC session with: **"Read all memory files first for full cont
 
 ## SESSION PROTOCOLS
 
-### New Claude Code Session
-**Start:** User opens with: *"Read all memory files first for full context, including handoff_protocol.md."*
-CC reads all memory files, then fetches SESSION LOG and IMMEDIATE NEXT ACTIONS from the public URL to orient on what changed last session.
-**End:** CC auto-updates the source of truth and pushes both repos per the handoff protocol below. Confirm both pushes succeeded. Nothing required from the user.
+### New Claude Code / Code session
+Boots automatically via `CLAUDE.md` auto-boot (commit 99aacc6) — no user action. The full CC-side procedure (meaningful-checkpoint rule, doc + mirror push sequence, freshness-stamp bump) lives in `memory/handoff_protocol.md` (v3). Fallback if a session seems uncalibrated: *"Read all memory files first, including handoff_protocol.md."*
 
 ### New Main Chat Session (always inside the CORPUS project)
-**Start:** User opens with: *"Fetch the CORPUS handoff doc at https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md. If it shows a commit older than a week, verify against the browser view at https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md (the raw URL sometimes lags due to GitHub cache). Once you have the current version, you're calibrated. Then ask what I want to work on."*
-**End:** Nothing required. Decisions/plans that must persist get logged by CC via a user prompt. Main chat reads the source of truth but cannot write to it — only CC writes.
+**Start:** Fetch this doc from the public raw URL: `https://raw.githubusercontent.com/byarscrowe-dev/corpus-handoff/main/CORPUS_HANDOFF_FULL.md`. Echo the `LAST-UPDATED:` stamp (the doc's first line) verbatim, plus the three most recent SESSION LOG entries, and only then proceed. If stale — old date, or content not leading with current state — run the retry ladder: cache-buster `?v=YYYYMMDD` on the raw URL, then the GitHub browser view (`https://github.com/byarscrowe-dev/corpus-handoff/blob/main/CORPUS_HANDOFF_FULL.md`). Freshness = the stamp + content, **NOT** commit-hash matching: the header tracks the MAIN repo commit, and mirror-push hashes differ by design (2026-06-04 incident).
+**End:** Main chat can READ the source of truth and memory but CANNOT WRITE to them. Anything that must persist routes as a dispatch prompt to a Code session — only CC writes.
 
 ### Standing Rules (always apply)
-1. **Three-tier model:** (a) credentials → `.env` only, never in any doc/memory/chat; (b) private context → CC memory files only, never pushed; (c) shareable context → this public handoff doc only. Sort every new piece of information into one tier at creation.
+1. **Three-tier model:** (a) credentials → `.env` only, never in any doc/memory/chat; (b) private context → CC memory files — may be backed up to the PRIVATE Corpus repo only (never the public mirror), after a secrets scan (precedent 8c1c67f); (c) shareable context → this public handoff doc. Sort every new piece of information into one tier at creation.
 2. **Work only from inside the CORPUS project.** Outside conversations cannot see memory or route through CC.
 
 ---
@@ -389,6 +389,8 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-04 | Mega memory backup — full baseline results (all 9 bots), key findings, workflow migration, fixture-collision rule, Phase 2 design questions, position-sizing ladder parking lot, UI architecture accuracy pass | docs-only |
 | 2026-06-04 | gitignore playlist CSV exports — stop recurring git-status clutter | f04ac47 |
 | 2026-06-04 | CLAUDE.md auto-boot pointer — routes every session to memory + handoff, inlines hard rules | 99aacc6 |
+| 2026-06-04 | Workflow migration marked complete in handoff; session-log + header commit truth-up | 69cbd37 |
+| 2026-06-04 | CC memory folder backed up to private repo (memory/); memory/ excluded from deploy | 8c1c67f |
 
 ---
 
