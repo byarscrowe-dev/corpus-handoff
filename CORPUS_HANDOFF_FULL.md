@@ -1,4 +1,4 @@
-LAST-UPDATED: 2026-06-05 13:35 CT | SEQ: 8 | LEAD: Security sweep #1 done — fix-now web hardening deployed (CSRF/headers/.env/scrapers/token/PII-untrack); real-money blockers parked
+LAST-UPDATED: 2026-06-05 14:09 CT | SEQ: 9 | LEAD: Boot/overhead cleanup — lighter CLAUDE.md boot + condensed archival blocks (session log / resolved issues / restore points) + trimmed project_c.md; no rules or current-state changed
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code).*
@@ -362,42 +362,14 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 ---
 
 ## SESSION LOG
-*One line per session. Claude Code writes to this after every meaningful commit.*
+*One line per session. Claude Code writes to this after every meaningful commit. Pre-2026-06-05 entries condensed to era-summaries (every commit hash retained); full granular history is in `git log`.*
 
 | Date | Summary | Commit |
 |------|---------|--------|
-| 2026-05-29 | VPS deployment, Spotify Orbit build, LinkedIn matching live | 460b36a |
-| 2026-05-30 | Remove split playlist functionality, play buttons, analytics cache | b000ed1 |
-| 2026-05-30 | Project registry (PROJECTS dict), Spotify SDK full logging + connect() fix, player auto-expands on Orbit | 3e24d09 |
-| 2026-05-30 | Switch handoff system from Google Drive to public GitHub repo; design_brief copied to memory | a90b329 |
-| 2026-06-01 | HTTPS + Basic Auth via nginx, DuckDNS domain (corpusbc.duckdns.org), source_url XSS fix, all audit findings resolved | 6bf3e57 |
-| 2026-06-01 | Fix Spotify redirect_uri — remove hardcoded localhost fallback, read SPOTIFY_REDIRECT_URI from env only | 22b4a52 |
-| 2026-06-01 | Spotify login confirmed working — root cause was commented-out HTTPS line in server .env; local .env synced | env-only |
-| 2026-06-02 | Credential leak remediation — Spotify secret + Adzuna key rotated, corpus-handoff history wiped to single clean commit, all handoff docs scrubbed to placeholders, three-tier credential rule added | docs-only |
-| 2026-06-02 | Session protocols + standing rules added to handoff doc and CC memory; MEMORY.md index updated | docs-only |
-| 2026-06-03 | Project C Phase 0b — WAL mode, 6 DB tables, stubs, /project-c UI skeleton deployed | 58430f7 |
-| 2026-06-03 | Project C Phase 1 Steps 1–2 — stock_price.py (yfinance cache, SPY calendar) + stock_broker.py | 1230462 |
-| 2026-06-03 | Project C Phase 1 Steps 3–4 — engine, strategies, app wiring, API routes, full UI live (96 tests total) | 3d23f9d |
-| 2026-06-03 | VPS resized 512MB → 2GB RAM + 2GB swap; sqlite3 installed; .env cleaned; DB backups at /root/corpus_backups/ | server-only |
-| 2026-06-03 | First backtests run via UI: momentum +39.00%, SPY +27.76%, momentum_v2 +13.55% (2022-01-03 → 2024-12-31) | UI-only |
-| 2026-06-03 | First automated forward run verified (ran=3 skipped=1 failed=0); per-bot metrics display bug logged | server-only |
-| 2026-06-04 | Fix Known Issue #12 — per-bot metrics now show backtest results when forward is day-one only; [BACKTEST]/[FORWARD] toggle added to metric cards; 10 new C24–C33 test assertions | ce2b5e5 |
-| 2026-06-04 | Fix Known Issue #12 (leaderboard instance) — OVERVIEW leaderboard now obeys chart mode toggle; statusBadge and populateLeaderboard accept mode param; default mode uses diverged-from-$100k check | b5630dd |
-| 2026-06-04 | Planning session — momentum_v3 greenlit; chaos bot greenlit; variant discipline rule; Mode 2 population search; bot genres; universe expansion; deploy.ps1 URL fix | docs-only |
-| 2026-06-04 | Six new bots live: momentum eagerness ladder v3(35)/v4(40)/v5(25) + chaos_random/lazy/hot; RandomStrategy with deterministic seeding + recent_winners mode; 54 new tests (159 total) | 6421560 |
-| 2026-06-04 | Baseline backtest button — BASELINE_BACKTEST_START/END constants in app.py; baseline:true API field; [ RUN BASELINE ] buttons in per-bot and engine tabs; 5 new test assertions (164 total) | c95f3a4 |
-| 2026-06-04 | Family-based UI — FAMILY_REGISTRY (3 families: momentum/#ff8800, chaos/#bb44ff, benchmark/#888888); family/subfamily in BOT_REGISTRY + config_json; champion-per-family OVERVIEW leaderboard + chart; family tabs with shaded member charts + SPY overlay; per-bot sections nested inside family panels; equity-data adds family/_families; 5 new test assertions (63 in step4, 164 total) | f146d0a |
-| 2026-06-04 | Click-to-expand bot details — family leaderboard rows clickable; one-at-a-time detail slot below family chart; lazy /api/project-c/bot fetch on first click; [ × ] close; active row family-color highlight; responsive width fixes (metrics grid minmax 160px, overflow-x on panels + table wrapper) | 79ab52b |
-| 2026-06-04 | Fix panel scroll — flex-shrink:0 on .pc-panel.active children forces overflow-y:auto to scroll instead of compressing content; remove auto-scrollIntoView on row click; stronger active-row highlight (0.13 opacity) | 5e91889 |
-| 2026-06-04 | Display integrity — no silent cross-mode substitution: seriesForMode removes forward→backtest fallback; statusBadge shows PENDING (not BACKTEST) in forward view; family leaderboard always renders rows; sparse-series point dots; honest bt_metrics positions_count from trade replay; mode-aware positions empty state; static mode label; 2 new test assertions (65 total) | c7cad32 |
-| 2026-06-04 | Merged SNAPSHOT health column — date badge replaces separate LAST SNAPSHOT + STATUS columns; green/red/grey freshness coloring in forward mode; neutral grey date in backtest mode; fix stale vs.SPY cell persisting on mode switch | 2ba4bbe |
-| 2026-06-04 | Mega memory backup — full baseline results (all 9 bots), key findings, workflow migration, fixture-collision rule, Phase 2 design questions, position-sizing ladder parking lot, UI architecture accuracy pass | docs-only |
-| 2026-06-04 | gitignore playlist CSV exports — stop recurring git-status clutter | f04ac47 |
-| 2026-06-04 | CLAUDE.md auto-boot pointer — routes every session to memory + handoff, inlines hard rules | 99aacc6 |
-| 2026-06-04 | Workflow migration marked complete in handoff; session-log + header commit truth-up | 69cbd37 |
-| 2026-06-04 | CC memory folder backed up to private repo (memory/); memory/ excluded from deploy | 8c1c67f |
-| 2026-06-04 | Handoff protocol v3 — auto-boot era, freshness stamp, materiality rule; doc SESSION PROTOCOLS section updated to v3 | 31f5f73 |
-| 2026-06-04 | Freshness stamp adds time-of-day (CT); SEQ 2; logged 31f5f73 | adebd4f |
+| 2026-05-29 → 05-30 | Initial VPS deployment + Spotify Orbit build + LinkedIn network matching; removed split-playlist; PROJECTS registry dict + Spotify SDK fixes (logging/connect/auto-expand); handoff moved Google Drive → public GitHub repo; design_brief → memory | 460b36a, b000ed1, 3e24d09, a90b329 |
+| 2026-06-01 → 06-02 | Security baseline: HTTPS (Let's Encrypt) + nginx Basic Auth (all routes) + DuckDNS domain + source_url XSS fix; Spotify redirect_uri env-only fix (login confirmed); credential-leak remediation (Spotify+Adzuna keys rotated, public history wiped, docs scrubbed) + three-tier credential rule; session protocols + standing rules added | 6bf3e57, 22b4a52, env/docs |
+| 2026-06-03 | Project C built end-to-end: Phase 0b (WAL + 6 DB tables + UI skeleton) → Steps 1–4 (price/broker/engine/strategies, app wiring, API routes, full UI, 96 tests); VPS resized 512MB → 2GB RAM + 2GB swap, sqlite3 + DB backups; first backtests (momentum +39.00%, SPY +27.76%, v2 +13.55%); first automated forward run verified (ran=3) | 58430f7, 1230462, 3d23f9d, server/UI |
+| 2026-06-04 | Project C maturing: KI#12 dual-mode metrics + leaderboard fixes; planning session (variant discipline, Mode 2, genres); six new bots + RandomStrategy (159 tests); baseline-backtest button (164 tests); family-based UI (FAMILY_REGISTRY) + click-to-expand details + panel-scroll fix + display-integrity (no cross-mode substitution) + merged SNAPSHOT column; mega memory backup; gitignore playlist CSVs; CLAUDE.md auto-boot; workflow-migration complete; CC memory backed up to private repo; handoff protocol v3 + freshness stamp w/ time (SEQ 2) | ce2b5e5, b5630dd, 6421560, c95f3a4, f146d0a, 79ab52b, 5e91889, c7cad32, 2ba4bbe, f04ac47, 99aacc6, 69cbd37, 8c1c67f, 31f5f73, adebd4f |
 | 2026-06-05 | Main-chat→CC MCP dispatch wired — `claude mcp serve` connected to Claude Desktop; standalone `claude` CLI v2.1.165 installed at `C:\Users\Byars\.local\bin\claude.exe`; copy-paste handoff retired; bypassPermissionsGateByAccount kept false (Auto-mode trust plan) | docs-only |
 | 2026-06-05 | Forward T+1 drain fix — fetch-before-drain so every bot fills at next-day open (momentum's stranded CRM/VRTX will now fill); SELLs-first buying-power guard; per-bot queued/filled/carried logging; injectable price_source for tests; 13 new tests (185 total) | cb0783b |
 | 2026-06-05 | Bot-health monitor + tiered auto-fixer — stock_health.py (diagnose from live registry; safe-allowlist auto-fix; concurrency/allowlist/false-positive adversarially audited); systemd timer Mon–Fri 18:30 + 08/12/22 CT as www-data with one NOPASSWD sudo; 26 tests (211 total) | c1fa9f5 |
@@ -407,25 +379,30 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | 2026-06-05 | Untrack linkedin_connections.csv (PII) — git rm --cached; .gitignore now effective; server file preserved + untracked during deploy | 19ff084 |
 | 2026-06-05 | Security sweep #1 fix-now hardening — SECRET_KEY never public-default; security headers (HSTS/X-Frame/nosniff/Referrer/CSP frame-ancestors); token-less CSRF Origin/Referer guard; removed runtime pip-install (supply-chain RCE); scraper size(8MB)+redirect(5) caps; Spotify token scoped to /project-g + console logs removed; project_g.html XSS escaping; setup_server.sh re-run guard. `.env` perms → 640 root:www-data (server). Deployed; 230 bot + 65 web tests green | 2c52eea |
 | 2026-06-05 | /security-sweep + /health-sweep slash commands + saved security-sweep workflow (.claude/) | ba34634 |
+| 2026-06-05 | Boot/overhead cleanup — lighter CLAUDE.md boot (read live-doc top + only the task's memory file, with full-read fallback); condensed archival blocks in place (older session-log rows, resolved known issues, git restore points) + trimmed superseded project_c.md sub-sections; no rule, standing-rule, engine-freeze, or current-state change; git history retains all originals; SEQ 9 | docs+boot |
 
 ---
 
 ## KNOWN ISSUES
 
+**Open / active:**
+
 | # | Issue | Status | Notes |
 |---|-------|--------|-------|
-| 1 | Play buttons exist but URIs empty until cache populated | `[ RESOLVED ]` | Click `[ REFRESH PLAYLISTS ]` on Sync tab confirmed working |
-| 2 | Analytics tab shows "NO DATA" | `[ RESOLVED ]` | Click `[ REFRESH ]` on Analytics tab — confirmed working |
 | 3 | Job count low on dashboard | `[ OPEN ]` | Adzuna duplicate credentials fixed. Wait for 8 AM CT daily scheduler run. Never use browser Refresh Jobs. |
-| 4 | Audio feature bars show 0 | `[ KNOWN LIMITATION ]` | Spotify audio features API returns 403 in dev mode since Nov 2024. Not fixable without Extended Quota approval |
-| 5 | No swap memory on VPS | `[ RESOLVED — 2026-06-03 ]` | VPS resized to 2GB RAM + 2GB swap |
-| 6 | Spotify SDK player shows NOT CONNECTED | `[ RESOLVED — 22b4a52 ]` | Redirect URI fix confirmed working. Re-authenticate if token expires: visit `https://corpusbc.duckdns.org/spotify/login` |
-| 7 | No authentication on any route | `[ RESOLVED — nginx Basic Auth 2026-06-01 ]` | All routes protected at nginx level |
-| 8 | No HTTPS — all traffic in cleartext | `[ RESOLVED — Let's Encrypt 2026-06-01 ]` | TLS cert via certbot for `corpusbc.duckdns.org`. Auto-renews. Expires 2026-08-30. |
-| 9 | `source_url` XSS — `javascript:` scheme possible in job URLs | `[ RESOLVED — 6bf3e57 ]` | `jobs.html` only renders `<a href>` when scheme is http/https |
-| 10 | Credentials committed to public corpus-handoff repo | `[ RESOLVED — 2026-06-02 ]` | Keys rotated, history wiped, three-tier credential rule enforced |
-| 11 | `deploy.ps1` prints bare IP at end | `[ OPEN — cosmetic ]` | Change to print `https://corpusbc.duckdns.org` |
-| 12 | Per-bot metrics cards show forward day-one values ($100k) instead of backtest results once forward data exists | `[ RESOLVED — ce2b5e5, b5630dd ]` | Endpoint returns bt_metrics + fwd_metrics separately (ce2b5e5). [BACKTEST]/[FORWARD] toggle on metric cards. OVERVIEW leaderboard also fixed to obey chart mode toggle (b5630dd). Both fixes use diverged-from-$100k default logic. |
+| 4 | Audio feature bars show 0 | `[ KNOWN LIMITATION ]` | Spotify audio features API returns 403 in dev mode since Nov 2024. Not fixable without Extended Quota approval. |
+| 11 | `deploy.ps1` prints bare IP at end | `[ OPEN — cosmetic ]` | Change to print `https://corpusbc.duckdns.org`. |
+
+**Resolved (condensed — full detail in git history):**
+- **#1** Play buttons empty until cache populated — `[ RESOLVED ]` (Refresh Playlists on Sync tab).
+- **#2** Analytics "NO DATA" — `[ RESOLVED ]` (Refresh on Analytics tab).
+- **#5** No swap on VPS — `[ RESOLVED 2026-06-03 ]` (resized to 2GB RAM + 2GB swap).
+- **#6** Spotify SDK "NOT CONNECTED" — `[ RESOLVED 22b4a52 ]` (redirect-URI fix; re-auth via `/spotify/login` if token expires).
+- **#7** No auth on routes — `[ RESOLVED 2026-06-01 ]` (nginx Basic Auth on all routes).
+- **#8** No HTTPS — `[ RESOLVED 2026-06-01 ]` (Let's Encrypt cert; auto-renews; expires 2026-08-30).
+- **#9** `source_url` `javascript:` XSS — `[ RESOLVED 6bf3e57 ]` (only http/https `<a href>` rendered).
+- **#10** Credentials in public repo — `[ RESOLVED 2026-06-02 ]` (keys rotated, history wiped, three-tier rule).
+- **#12** Per-bot cards showed forward day-one $100k over backtest — `[ RESOLVED ce2b5e5, b5630dd ]` (separate bt/fwd metrics + [BACKTEST]/[FORWARD] toggle + leaderboard obeys mode).
 
 ---
 
@@ -461,6 +438,7 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 | Bot-health auto-fixer is tiered: auto-remediate safe ops, escalate the rest | A 24/7 monitor that auto-fixed everything could corrupt append-only forward data or deploy bad code unattended. stock_health.py auto-fixes ONLY a hard allowlist (restart_service, idempotent rerun_forward, clear_stale_lock, rewarm_cache) and escalates all else (negative cash, duplicate fills, logic bugs). Refuses rerun_forward in the 17:55–18:25 CT scheduler window (the idempotency guard is not concurrency-safe — confirmed by adversarial audit); runs as www-data with one NOPASSWD sudo (restart corpus only). Mirrors the Auto-mode trust philosophy — earn unattended action on the safe tier, keep humans on the risky tier | 2026-06-05 |
 | Forward run is concurrency-safe via a real lock + atomic fill/dequeue; an integrity breach HALTS trading | The health monitor's auto-rerun turned the no-lock forward run into a live double-fill risk (adversarial audit). Fix (human-approved engine-freeze exception): per-bot O_EXCL forward lock held across the whole run; fill + pending-dequeue in ONE broker transaction; forward snapshot changed INSERT OR REPLACE → INSERT so a duplicate raises + rolls back + sets a trading-halt flag instead of silently overwriting append-only truth. Circuit breaker: a critical integrity breach (dup fills, negative cash/shares, dup snapshot) halts ALL forward runs until a human clears it (`stock_health.py --resume`); operational issues still auto-heal. Both paths verified clean by adversarial review | 2026-06-05 |
 | Security: defense-in-depth web hardening now; per-user auth / audit log / secrets vault / DB encryption / rate-limiting deferred to a pre-real-money project | First of a planned series of read-only security sweeps (runnable via `/security-sweep`). Sweep #1 confirmed clean: no SQL/command injection, secrets not in git history, nginx Basic Auth + TLS on ALL routes (auth_basic at server level), gunicorn no-debug, sudoers one-line, requests 2.34.2 / gunicorn 26.0 (patched). Fix-now items shipped (2c52eea). The single shared Basic-Auth model is the #1 real-money blocker — app-layer auth + 2FA + audit log + secrets manager + at-rest encryption + fail2ban must precede any real funds (see Parking Lot) | 2026-06-05 |
+| Session-boot reading made lighter; archival doc sections condensed (no rules touched) | Every session was force-reading two files in full (~80 KB: handoff doc 53.5 KB + project_c.md 26.3 KB) before any work — the main cause of Claude Code boot lag. CLAUDE.md now boots on the handoff doc's LIVE part + only the memory file the task needs (project_c.md for BOURSE, design_brief.md for UI, etc.), with a full-read fallback when scope is unclear. Archival blocks (older session-log rows, resolved known issues, git restore points) condensed in place; superseded project_c.md sub-sections trimmed. Git history retains all originals. Hard rules, standing rules, engine-freeze rules, the full Decision Log, and all current-state facts are unchanged — only boot steps + archive verbosity changed | 2026-06-05 |
 
 ---
 
@@ -526,6 +504,8 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 
 ## GIT RESTORE POINTS
 
+**Recent (full):**
+
 | Commit | Description | Date |
 |--------|-------------|------|
 | a2851e1 | Mega memory backup — full baseline results, workflow migration, fixture-collision rule | 2026-06-04 |
@@ -540,21 +520,23 @@ For Project D — render uploaded images in dot-matrix style matching CORPUS vis
 | 3d23f9d | Project C Step 4 — app wiring, API routes, full UI live (43 tests) | 2026-06-03 |
 | a1cc9a7 | Project C Step 3 — strategies, engine, test suite (53 tests) | 2026-06-03 |
 | 1230462 | Project C Step 2 — BacktestBroker + SimulatedBroker | 2026-06-03 |
-| 265e846 | Add 'tickers' explicit-list to resolve_tickers (test fixture support) | 2026-06-03 |
-| 340d97f | Project C Step 1 — stock_price.py + sp500_universe.csv | 2026-06-03 |
-| 58430f7 | Project C Phase 0b — WAL, 6 DB tables, stubs, /project-c UI skeleton | 2026-06-03 |
-| 22b4a52 | Fix Spotify redirect_uri — read from env only | 2026-06-01 |
-| 6bf3e57 | HTTPS + Basic Auth + source_url XSS fix | 2026-06-01 |
-| b000ed1 | Remove split playlist functionality from UI, routes, and agent | 2026-05-30 |
-| 3e24d09 | Project registry + Spotify SDK fixes (logging, connect() promise, auto-expand) | 2026-05-30 |
-| a90b329 | Switch handoff to public GitHub repo, design_brief to memory | 2026-05-30 |
-| 460b36a | Play buttons, analytics cache, Sp_O sidebar, Adzuna fix | 2026-05-30 |
-| cc80bc7 | CronTrigger 8AM CT, timezone display in CT | 2026-05-29 |
-| 730e2fe | Rate limit hotfix: retries=0, Spotify sync 24h delay | 2026-05-29 |
-| bb51f60 | Fix deploy.ps1: safe.directory before git pull | 2026-05-29 |
-| 0ac05bc | v1.0: Project G — full Spotify agent | early |
-| a425590 | v0.7: LinkedIn network matching via CSV | early |
-| 5ba1b22 | v0.1: Initial snapshot | early |
+
+**Older (condensed — every hash retained; `git checkout <hash>` still works):**
+- `265e846` — resolve_tickers explicit-list (test fixture support) · 2026-06-03
+- `340d97f` — Project C Step 1: stock_price.py + sp500_universe.csv · 2026-06-03
+- `58430f7` — Project C Phase 0b: WAL, 6 DB tables, /project-c UI skeleton · 2026-06-03
+- `22b4a52` — Fix Spotify redirect_uri (env only) · 2026-06-01
+- `6bf3e57` — HTTPS + Basic Auth + source_url XSS fix · 2026-06-01
+- `b000ed1` — Remove split-playlist functionality · 2026-05-30
+- `3e24d09` — Project registry + Spotify SDK fixes (logging, connect() promise, auto-expand) · 2026-05-30
+- `a90b329` — Switch handoff to public GitHub repo; design_brief to memory · 2026-05-30
+- `460b36a` — Play buttons, analytics cache, Sp_O sidebar, Adzuna fix · 2026-05-30
+- `cc80bc7` — CronTrigger 8AM CT, CT timezone display · 2026-05-29
+- `730e2fe` — Rate-limit hotfix: retries=0, Spotify sync 24h delay · 2026-05-29
+- `bb51f60` — Fix deploy.ps1: safe.directory before git pull · 2026-05-29
+- `0ac05bc` — v1.0: Project G full Spotify agent · early
+- `a425590` — v0.7: LinkedIn network matching via CSV · early
+- `5ba1b22` — v0.1: Initial snapshot · early
 
 ---
 
