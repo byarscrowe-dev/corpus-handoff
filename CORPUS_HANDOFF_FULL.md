@@ -1,4 +1,6 @@
-LAST-UPDATED: 2026-06-07 23:24 CT | SEQ: 12 | LEAD: CONGRESS leadership roster finalized — strict equity-trader roster (Wyden removed; Capito/Whitehouse/Hill/Williams + aliases added); Grassley evaluated & excluded; roster commit be828e6 pushed; post-ingest Bioguide verification pending
+LAST-UPDATED: 2026-06-10 02:52 CT | SEQ: 13 | LEAD: HANDOFF FROZEN — hard rules → RULES.md; session ledger → memory/LOG.md; SEQ mechanism retired pending CONTEXT_PACKET (final SEQ)
+
+> **⚠️ FROZEN — 2026-06-10 (SEQ 13, final).** This document is retired as a live truth-home. Hard rules now live in `RULES.md`; session history in `memory/LOG.md`; operational context in `memory/`. Do not update this document. The SEQ/freshness mechanism is retired pending the Phase-2 generated `CONTEXT_PACKET.md`. Everything below is preserved as historical archive — protocol text below describing the SEQ/mirror system describes the PRE-2026-06-10 system and is no longer in force.
 
 # CORPUS — Source of Truth
 *Single document for all Claude sessions (main chat + Claude Code).*
@@ -362,6 +364,9 @@ This document is mirrored to a public GitHub repo. It must never contain real se
 ---
 
 ## SESSION LOG
+
+> **⚠️ SESSION LOG FROZEN at the SEQ 12 rows (2026-06-10).** This table will never receive another row. New entries go to `memory/LOG.md` — the append-only event ledger that replaces it.
+
 *One line per session. Claude Code writes to this after every meaningful commit. Pre-2026-06-05 entries condensed to era-summaries (every commit hash retained); full granular history is in `git log`.*
 
 | Date | Summary | Commit |
